@@ -1,0 +1,133 @@
+{
+  "extracao": "CEP e UF extraídos de todo o site Sublime Sonhos",
+  "data": "2026-08-20",
+  "cep": {
+    "valores": [
+      {
+        "valor": "45645-000",
+        "tipo": "placeholder",
+        "origem": "assets/js/utils.js, linha 57",
+        "contexto": "Comentário da função mascaraCEP — não é um CEP real, apenas exemplo de formatação"
+      }
+    ],
+    "formularios_com_cep": [],
+    "observacao": "Nenhum formulário do site possui campo de CEP. A função mascaraCEP existe em utils.js mas não é usada em nenhum formulário. A propriedade end.cep é referenciada em whatsapp.js para formatação da mensagem, mas nunca é coletada do usuário."
+  },
+  "uf": {
+    "valores": [
+      {
+        "valor": "BA",
+        "tipo": "Unidade Federativa (Bahia)",
+        "origem": "assets/js/config.js, linha 48",
+        "contexto": "loja.area = 'Aurelino Leal e Ubaitaba (BA)'"
+      },
+      {
+        "valor": "BA",
+        "tipo": "Unidade Federativa (Bahia)",
+        "origem": "assets/js/config.js, linha 49",
+        "contexto": "loja.cidade = 'Aurelino Leal - BA'"
+      },
+      {
+        "valor": "BA",
+        "tipo": "Unidade Federativa (Bahia)",
+        "origem": "assets/js/ui.js, linha 108",
+        "contexto": "Footer renderizado dinamicamente: renderFooter() usa cfg.loja.area"
+      },
+      {
+        "valor": "BA",
+        "tipo": "Unidade Federativa (Bahia)",
+        "origem": "index.html, linha 6",
+        "contexto": "<title>Sublime Sonhos - Doces artesanais em Aurelino Leal e Ubaitaba (BA)</title>"
+      },
+      {
+        "valor": "BA",
+        "tipo": "Unidade Federativa (Bahia)",
+        "origem": "index.html, linha 7",
+        "contexto": "<meta name=\"description\" content=\"...Aurelino Leal e Ubaitaba (BA)...\">"
+      },
+      {
+        "valor": "BA",
+        "tipo": "Unidade Federativa (Bahia)",
+        "origem": "index.html, linha 15",
+        "contexto": "<meta property=\"og:description\" content=\"...Em Aurelino Leal e Ubaitaba (BA)...\">"
+      },
+      {
+        "valor": "BA",
+        "tipo": "Unidade Federativa (Bahia)",
+        "origem": "index.html, linha 46",
+        "contexto": "JSON-LD areaServed: [\"Aurelino Leal - BA\", \"Ubaitaba - BA\"]"
+      },
+      {
+        "valor": "BA",
+        "tipo": "Unidade Federativa (Bahia)",
+        "origem": "index.html, linha 66",
+        "contexto": "<p class=\"eyebrow\">...Confeitaria artesanal à Aurelino Leal e Ubaitaba (BA)</p>"
+      },
+      {
+        "valor": "BA",
+        "tipo": "Unidade Federativa (Bahia)",
+        "origem": "index.html, linha 288",
+        "contexto": "FAQ: 'Atendemos Aurelino Leal e Ubaitaba (BA)'"
+      },
+      {
+        "valor": "BA",
+        "tipo": "Unidade Federativa (Bahia)",
+        "origem": "index.html, linha 319",
+        "contexto": "Seção de contato: 'Aurelino Leal e Ubaitaba (BA)'"
+      },
+      {
+        "valor": "BA",
+        "tipo": "Unidade Federativa (Bahia)",
+        "origem": "bolo-personalizado.html, linha 164",
+        "contexto": "<input ... value=\"Aurelino Leal - BA\"> — campo cidade pré-preenchido"
+      },
+      {
+        "valor": "BA",
+        "tipo": "Unidade Federativa (Bahia)",
+        "origem": "README.md, linha 38",
+        "contexto": "Tabela de configurações: 'Área de atuação | loja.area | Aurelino Leal e Ubaitaba (BA)'"
+      }
+    ],
+    "cidades_atendidas": [
+      { "cidade": "Aurelino Leal", "uf": "BA" },
+      { "cidade": "Ubaitaba", "uf": "BA" }
+    ]
+  },
+  "formularios_analisados": [
+    {
+      "pagina": "carrinho.html",
+      "arquivo": "assets/js/pages/carrinho.js",
+      "campos_endereco": ["numero", "rua", "complemento", "bairro", "cidade (pré-preenchido)", "referencia"],
+      "campos_cep": false,
+      "campos_uf": false
+    },
+    {
+      "pagina": "encomenda.html",
+      "arquivo": "assets/js/pages/encomenda.js",
+      "campos_endereco": ["numero", "rua", "complemento", "bairro", "cidade (pré-preenchido)", "referencia"],
+      "campos_cep": false,
+      "campos_uf": false
+    },
+    {
+      "pagina": "bolo-personalizado.html",
+      "arquivo": "assets/js/pages/bolo.js",
+      "campos_endereco": ["rua", "numero", "complemento", "bairro", "cidade (pré-preenchido)", "referencia"],
+      "campos_cep": false,
+      "campos_uf": false
+    }
+  ],
+  "referencias_codificadas": {
+    "cep": [
+      { "arquivo": "assets/js/utils.js", "linha": 57, "descricao": "Comentário: /* Máscara de CEP: 45645-000 */" },
+      { "arquivo": "assets/js/utils.js", "linhas": "58-62", "descricao": "Função mascaraCEP(v) — formata entrada como XX XXX-X" },
+      { "arquivo": "assets/js/utils.js", "linha": 152, "descricao": "Export: mascaraCEP: mascaraCEP" },
+      { "arquivo": "assets/js/whatsapp.js", "linha": 32, "descricao": "Formatação CEP na mensagem do WhatsApp: if (end.cep) partes.push('CEP ' + end.cep)" }
+    ],
+    "uf": [
+      { "arquivo": "assets/js/whatsapp.js", "linha": 31, "descricao": "Formatação UF na mensagem do WhatsApp: end.cidade + ' - ' + end.uf" },
+      { "arquivo": "assets/js/config.js", "linha": 48, "descricao": "loja.area: 'Aurelino Leal e Ubaitaba (BA)'" },
+      { "arquivo": "assets/js/config.js", "linha": 49, "descricao": "loja.cidade: 'Aurelino Leal - BA'" },
+      { "arquivo": "assets/js/ui.js", "linha": 108, "descricao": "Footer: renderiza cfg.loja.area dinamicamente" }
+    ]
+  }
+}

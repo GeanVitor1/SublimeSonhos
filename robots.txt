@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sublimesonhos.vercel.app/sitemap.xml

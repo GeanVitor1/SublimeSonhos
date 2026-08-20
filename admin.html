@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Área da loja — Sublime Sonhos</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/site/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/img/site/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@2.3.0/dist/iconify-icon.min.js"></script>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="admin-body">
+  <div id="site-header"></div>
+
+  <main class="admin-shell">
+    <!-- LOGIN -->
+    <section id="admin-login">
+      <div class="auth-card">
+        <div class="logo-mark" style="margin:0 auto 16px;width:58px;height:58px" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
+        <h1>Área da loja</h1>
+        <p class="text-muted text-sm text-center mt-1 mb-3">Acesso restrito à proprietária da Sublime Sonhos.</p>
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="senha">Senha</label>
+            <input class="form-control" id="senha" type="password" autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn btn--primary btn--block mt-3">Entrar</button>
+          <p class="text-sm text-muted text-center mt-2" id="login-aviso" style="display:none;color:var(--danger);font-weight:700">Senha incorreta. Tente novamente.</p>
+          <p class="form-hint text-center mt-3">Senha provisória do modo demonstração definida no arquivo <code>assets/js/config.js</code> (campo <code>admin.senhaDemo</code>).</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- PAINEL -->
+    <section id="admin-painel" class="hidden">
+      <div class="admin-top">
+        <div>
+          <p class="eyebrow" style="margin-bottom:4px">Área da loja</p>
+          <h1 style="font-size:28px">Painel administrativo</h1>
+        </div>
+        <div class="flex gap-3 items-center">
+          <a class="btn btn--outline btn--sm" href="index.html">Ver site</a>
+          <button type="button" class="btn btn--dark btn--sm" id="btn-sair">Sair</button>
+        </div>
+      </div>
+
+      <div class="admin-banner" id="banner-demo">
+        <iconify-icon icon="ph:warning-circle" width="16" height="16" style="vertical-align:-2px"></iconify-icon> <span><strong>Modo demonstração:</strong> as alterações ficam salvas apenas neste navegador (localStorage). Para publicar os cadastros para todos os clientes, ative o Supabase conforme o README.md.</span>
+      </div>
+
+      <div class="admin-tabs" role="tablist">
+        <button type="button" class="active" data-tab="produtos">Produtos</button>
+        <button type="button" data-tab="categorias">Categorias</button>
+        <button type="button" data-tab="config">Configurações</button>
+      </div>
+
+      <!-- TAB PRODUTOS -->
+      <div data-tabpanel="produtos">
+        <div class="flex gap-3 items-center justify-between mb-3" style="flex-wrap:wrap">
+          <input type="search" class="form-control admin-search" id="busca-prod" placeholder="Buscar produto…" aria-label="Buscar produto">
+          <div class="flex gap-2">
+            <button type="button" class="btn btn--outline btn--sm" id="btn-exportar">Exportar catálogo (JSON)</button>
+            <button type="button" class="btn btn--primary btn--sm" id="btn-novo">+ Novo produto</button>
+          </div>
+        </div>
+        <div class="muted-bg" style="padding:0;overflow:hidden">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Produto</th><th>Categoria</th><th>Preço</th><th>Status</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-produtos"><!-- via JS --></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB CATEGORIAS -->
+      <div data-tabpanel="categorias" class="hidden">
+        <div class="flex gap-3 items-center justify-between mb-3" style="flex-wrap:wrap">
+          <h2 style="font-size:22px">Categorias</h2>
+          <button type="button" class="btn btn--primary btn--sm" id="btn-nova-cat">+ Nova categoria</button>
+        </div>
+        <div class="muted-bg" style="padding:0;overflow:hidden">
+          <table class="admin-table">
+            <thead><tr><th>Categoria</th><th>Ícone</th><th>Produtos</th><th>Ações</th></tr></thead>
+            <tbody id="tabela-categorias"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB CONFIG -->
+      <div data-tabpanel="config" class="hidden">
+        <form class="admin-form" id="form-config">
+          <section>
+            <h3>WhatsApp e redes</h3>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label" for="cfg-wa">Número do WhatsApp (com DDD)</label><input class="form-control" id="cfg-wa" type="tel" inputmode="numeric" placeholder="73981756809"></div>
+              <div class="form-group"><label class="form-label" for="cfg-link">Link comercial (wa.me/message/…)</label><input class="form-control" id="cfg-link" type="url" placeholder="https://wa.me/message/…"></div>
+              <div class="form-group"><label class="form-label" for="cfg-ig">Instagram (URL)</label><input class="form-control" id="cfg-ig" type="url" placeholder="https://instagram.com/…"></div>
+              <div class="form-group"><label class="form-label" for="cfg-igu">Usuário do Instagram</label><input class="form-control" id="cfg-igu" type="text" placeholder="@sonhosublime_"></div>
+            </div>
+          </section>
+          <section>
+            <h3>Loja e atendimento</h3>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label" for="cfg-area">Área atendida</label><input class="form-control" id="cfg-area" type="text"></div>
+              <div class="form-group"><label class="form-label" for="cfg-cidade">Cidade</label><input class="form-control" id="cfg-cidade" type="text"></div>
+              <div class="form-group"><label class="form-label" for="cfg-end">Endereço (retirada)</label><input class="form-control" id="cfg-end" type="text"></div>
+              <div class="form-group"><label class="form-label" for="cfg-horario">Horário de atendimento</label><input class="form-control" id="cfg-horario" type="text"></div>
+              <div class="form-group"><label class="form-label" for="cfg-ant">Antecedência mínima (dias)</label><input class="form-control" id="cfg-ant" type="number" min="0" max="30"></div>
+            </div>
+          </section>
+          <section>
+            <h3>Entrega</h3>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label" for="cfg-ent-modo">Modo de cálculo</label>
+                <select class="form-control" id="cfg-ent-modo">
+                  <option value="confirmar">Confirmar pelo WhatsApp</option>
+                  <option value="fixa">Taxa fixa</option>
+                  <option value="bairro">Taxa por bairro</option>
+                </select>
+              </div>
+              <div class="form-group" id="cfg-taxa-wrap"><label class="form-label" for="cfg-taxa">Taxa fixa (R$)</label><input class="form-control" id="cfg-taxa" type="number" min="0" step="0.5"></div>
+              <div class="form-group" id="cfg-bairros-wrap" class="hidden"><label class="form-label" for="cfg-bairros">Taxa por bairro (uma por linha: bairro;valor)</label><textarea class="form-control" id="cfg-bairros" rows="4" placeholder="centro;5,00&#10;bairro exemplo;8,00"></textarea></div>
+            </div>
+            <div class="form-row mt-2">
+              <div class="form-group"><label class="form-label" for="cfg-ent-nota">Nota exibida ao cliente</label><input class="form-control" id="cfg-ent-nota" type="text"></div>
+            </div>
+            <div class="form-group mt-2"><label class="form-label" for="cfg-ent-info">Texto da seção "Entrega e retirada"</label><textarea class="form-control" id="cfg-ent-info" rows="3"></textarea></div>
+          </section>
+          <section>
+            <h3>Pagamento</h3>
+            <p class="text-sm text-muted mb-2">Formas de pagamento (mesmas para antecipado e na entrega/retirada). Separar por vírgula.</p>
+            <div class="form-group">
+              <label class="form-label" for="cfg-pg-metodos">Métodos de pagamento</label>
+              <input class="form-control" id="cfg-pg-metodos" type="text" placeholder="PIX, Cartão de crédito, Cartão de débito, Dinheiro, Link de pagamento, Outro (combinar com a loja)">
+            </div>
+          </section>
+          <div class="flex gap-3 items-center">
+            <button type="submit" class="btn btn--primary btn--lg">Salvar configurações</button>
+            <span class="text-sm text-muted" id="config-status"></span>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h3 id="modal-title">Título</h3>
+      <div id="modal-body" style="margin-top:14px"></div>
+      <div class="modal-actions" id="modal-actions"></div>
+    </div>
+  </div>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data/catalogo.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/whatsapp.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/pages/admin.js"></script>
+</body>
+</html>
