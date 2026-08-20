@@ -786,6 +786,7 @@ html { scroll-behavior: smooth; }
 .faq-item__q .chev { transition: transform 0.3s var(--ease); color: var(--terra); flex-shrink: 0; }
 .faq-item.open .faq-item__q .chev { transform: rotate(180deg); }
 .faq-item__a { max-height: 0; overflow: hidden; transition: max-height 0.35s var(--ease); }
+.faq-item.open .faq-item__a { max-height: 420px; }
 .faq-item__a > div { padding: 0 22px 20px; color: var(--muted); font-size: 14.5px; }
 
 /* ------------------------------------------------------------------ */
