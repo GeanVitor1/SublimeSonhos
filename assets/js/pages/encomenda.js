@@ -18,7 +18,7 @@ window.SS = window.SS || {};
     modalidade: 'retirada',
     endereco: { rua: '', numero: '', complemento: '', bairro: '', cidade: cfg.loja.cidade, referencia: '' },
     pagamento: '', momentoPagamento: '', troco: false, trocoPara: '',
-    card: { numero: '', validade: '', cvv: '' }, pagamentoAprovado: false,
+    card: { numero: '', nome: '', validade: '', cvv: '', parcelas: '1' }, pagamentoAprovado: false,
     observacoes: '',
   };
 

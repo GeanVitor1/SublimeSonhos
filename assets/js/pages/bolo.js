@@ -14,7 +14,7 @@ window.SS = window.SS || {};
   var pg = {
     momentoPagamento: 'na-entrega',
     pagamento: '',
-    card: { numero: '', validade: '', cvv: '' },
+    card: { numero: '', nome: '', validade: '', cvv: '', parcelas: '1' },
     troco: false, trocoPara: '',
     pagamentoAprovado: false,
   };
