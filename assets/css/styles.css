@@ -1446,6 +1446,29 @@ input[type="date"].form-control::-webkit-datetime-edit-text { color: var(--muted
 }
 .wa-float:hover { transform: translateY(-4px) scale(1.04); }
 .wa-float svg { width: 28px; height: 28px; }
+.cart-float {
+  position: fixed; right: 90px; bottom: 20px; z-index: 350;
+  width: 58px; height: 58px; border-radius: 50%;
+  background: var(--ink); color: #fff;
+  display: grid; place-items: center;
+  border: 0; cursor: pointer;
+  box-shadow: 0 12px 30px rgba(43,37,29,0.28);
+  transition: transform 0.2s var(--ease), opacity 0.2s var(--ease), visibility 0.2s;
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.cart-float.show { opacity: 1; visibility: visible; pointer-events: auto; }
+.cart-float:hover { transform: translateY(-4px) scale(1.04); }
+.cart-float:active { transform: scale(0.96); }
+.cart-float svg { width: 26px; height: 26px; }
+.cart-float__count {
+  position: absolute; top: -2px; right: -2px;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  border-radius: 999px; background: var(--candy); color: #fff;
+  font-size: 11px; font-weight: 800; line-height: 1;
+  display: grid; place-items: center;
+  border: 2px solid #fff; font-variant-numeric: tabular-nums;
+}
+.cart-float__count:empty { display: none; }
 .wa-float::after {
   content: ''; position: absolute; inset: 0; border-radius: 50%;
   border: 2px solid rgba(37, 211, 102, 0.5);
@@ -1457,7 +1480,7 @@ input[type="date"].form-control::-webkit-datetime-edit-text { color: var(--muted
   100% { transform: scale(1.45); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .wa-float::after { animation: none; display: none; } }
-@media (max-width: 640px) { .wa-float { right: 14px; bottom: 14px; width: 54px; height: 54px; } }
+@media (max-width: 640px) { .wa-float { right: 14px; bottom: 14px; width: 54px; height: 54px; } .cart-float { right: 76px; bottom: 14px; width: 54px; height: 54px; } .cart-float svg { width: 24px; height: 24px; } }
 
 /* ------------------------------------------------------------------ */
 /* FIX: barra de rolagem horizontal em resoluções pequenas            */

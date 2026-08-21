@@ -159,12 +159,23 @@ window.SS = window.SS || {};
     SS.ui.toggleCart = set;
   }
 
+  function atualizarCartFloat() {
+    var cFloat = document.getElementById('cart-float');
+    var cCount = document.querySelector('.cart-float__count');
+    var n = SS.cart.contar();
+    if (cFloat) {
+      cFloat.classList.toggle('show', n > 0);
+      cFloat.setAttribute('aria-label', n > 0 ? 'Abrir carrinho (' + n + ' itens) — finalizar compra' : 'Abrir carrinho');
+    }
+    if (cCount) cCount.textContent = n > 0 ? String(n) : '';
+  }
   function renderCartDrawer(itens) {
     var body = document.getElementById('cart-drawer-body');
     var foot = document.getElementById('cart-drawer-foot');
     var count = document.getElementById('cart-count');
     var badge = document.querySelector('.cart-count');
     if (badge) badge.textContent = SS.cart.contar() > 0 ? String(SS.cart.contar()) : '';
+    atualizarCartFloat();
 
     if (itens.length === 0) {
       body.innerHTML =
@@ -300,6 +311,7 @@ window.SS = window.SS || {};
         '<div class="drawer__foot" id="cart-drawer-foot"></div>' +
       '</aside>' +
       '<div class="toast" id="toast" role="status" aria-live="polite"></div>' +
+      '<button type="button" class="cart-float" id="cart-float" aria-label="Abrir carrinho" data-open-cart>' + ICON_CART + '<span class="cart-float__count" aria-hidden="true"></span></button>' +
       '<a class="wa-float" href="' + SS.whatsapp.linkContato() + '" target="_blank" rel="noopener" aria-label="Conversar no WhatsApp">' + ICON_WHATSAPP + '</a>';
     document.body.appendChild(div);
   }
