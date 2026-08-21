@@ -62,15 +62,12 @@ window.SS = window.SS || {};
       passos.push('<div class="steps-bar__item' + (i < passo ? ' done' : i === passo ? ' active' : '') + '"></div>');
     }
 
-    var mostraResumo = (passo === 4);
     el.innerHTML =
       '<div class="steps-bar" aria-hidden="true">' + passos.join('') + '</div>' +
-      '<div class="checkout-grid' + (mostraResumo ? '' : ' checkout-grid--sem-resumo') + '">' +
+      '<div class="checkout-grid checkout-grid--sem-resumo">' +
         '<div id="painel-esquerda"></div>' +
-        (mostraResumo ? '<aside class="panel" id="painel-resumo"></aside>' : '') +
       '</div>';
 
-    if (mostraResumo) renderResumo(itens, sobConsulta);
     renderPasso(sobConsulta);
   }
 
@@ -131,7 +128,7 @@ window.SS = window.SS || {};
     } else if (passo === 3) {
       html =
         '<div class="panel"><h2><span class="n">3</span> Retirada ou entrega</h2><div class="panel__body">' +
-          '<div class="opts">' +
+          '<div class="opts opts--2col">' +
             '<label class="opt' + (dados.modalidade === 'retirada' ? ' selected' : '') + '"><input type="radio" name="modalidade" value="retirada"' + (dados.modalidade === 'retirada' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Retirada no local</span></label>' +
             '<label class="opt' + (dados.modalidade === 'entrega' ? ' selected' : '') + '"><input type="radio" name="modalidade" value="entrega"' + (dados.modalidade === 'entrega' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Entrega em domicílio</span></label>' +
           '</div>' +
@@ -148,6 +145,14 @@ window.SS = window.SS || {};
           '</div>' +
         '</div></div>';
     } else if (passo === 4) {
+      var sub4 = SS.cart.subtotal();
+      var ent4 = valorEntrega();
+      var total4 = totalEstimado();
+      var itens4 = SS.cart.getItens();
+      var resumoHtml = '<div class="panel" style="margin-top:18px;background:#fffdf9;border:1.5px solid var(--line)"><h3 style="font-size:15px;font-weight:800;margin:0 0 12px">Resumo do pedido</h3>' +
+        '<div>' + itens4.map(function(item){ var ops=SS.cart.formatarOpcoes(item); var preco=SS.cart.precoUnitarioItem(item); return '<div class="order-summary-item"><div class="order-summary-item__body"><div class="order-summary-item__name">'+item.qty+'x '+u.esc(item.nome)+'</div>'+(ops?'<div class="order-summary-item__opts">'+u.esc(ops)+'</div>':'')+'</div><div class="order-summary-item__price">'+(preco===null?'Sob consulta':u.fmtBRL(preco*item.qty))+'</div></div>'; }).join('') + '</div>' +
+        '<div class="summary-totals" style="margin-top:12px"><div class="row"><span>Subtotal</span><span>'+u.fmtBRL(sub4)+'</span></div><div class="row"><span>Entrega</span><span>'+(ent4===null?'a confirmar':u.fmtBRL(ent4))+'</span></div><div class="row total"><span>Total estimado</span><span>'+(total4===null?'a confirmar':u.fmtBRL(total4))+'</span></div></div>' +
+        (sobConsulta?'<p class="text-sm text-muted mt-2"><iconify-icon icon="ph:warning-circle" width="15" height="15" style="vertical-align:-2px"></iconify-icon> Itens sem preço definido — total será confirmado pela loja.</p>':'') + '</div>';
       html =
         '<div class="panel"><h2><span class="n">4</span> Pagamento</h2><div class="panel__body">' +
           '<p class="form-hint mb-2">Mesmas formas de pagamento para <strong>antecipado</strong> e <strong>na entrega/retirada</strong>. Ao simular o pagamento, abrimos o WhatsApp com a mensagem formatada do seu pedido.</p>' +
@@ -159,6 +164,7 @@ window.SS = window.SS || {};
             SS.pagamento.renderControles(dados) +
             '<div class="form-error">Escolha a forma de pagamento.</div>' +
           '</div>' +
+          resumoHtml +
           '<div class="form-group mt-3"><label class="form-label" for="f-obs">Observações gerais</label><textarea class="form-control" id="f-obs" rows="2" placeholder="Alguma observação para a loja?">' + u.esc(dados.observacoes) + '</textarea></div>' +
           '<button type="button" class="btn btn--whatsapp btn--lg btn--block mt-3" id="btn-simular-pagamento">Simular pagamento</button>' +
         '</div></div>';

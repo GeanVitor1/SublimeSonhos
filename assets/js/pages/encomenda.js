@@ -153,14 +153,11 @@ window.SS = window.SS || {};
     for (var i = 1; i <= TOTAIS; i++) {
       passos.push('<div class="steps-bar__item' + (i < passo ? ' done' : i === passo ? ' active' : '') + '"></div>');
     }
-    var mostraResumo = (passo === 4);
     el.innerHTML =
       '<div class="steps-bar" aria-hidden="true">' + passos.join('') + '</div>' +
-      '<div class="checkout-grid' + (mostraResumo ? '' : ' checkout-grid--sem-resumo') + '">' +
+      '<div class="checkout-grid checkout-grid--sem-resumo">' +
         '<div id="painel-esquerda"></div>' +
-        (mostraResumo ? '<aside class="panel" id="painel-resumo"></aside>' : '') +
       '</div>';
-    if (mostraResumo) renderResumo();
     renderPasso();
   }
 
@@ -288,7 +285,7 @@ window.SS = window.SS || {};
       } else if (passo === 2) {
         html =
           '<div class="panel"><h2><span class="n">2</span> Retirada ou entrega</h2><div class="panel__body">' +
-            '<div class="opts">' +
+            '<div class="opts opts--2col">' +
               '<label class="opt' + (dados.modalidade === 'retirada' ? ' selected' : '') + '"><input type="radio" name="modalidade" value="retirada"' + (dados.modalidade === 'retirada' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Retirada no local</span></label>' +
               '<label class="opt' + (dados.modalidade === 'entrega' ? ' selected' : '') + '"><input type="radio" name="modalidade" value="entrega"' + (dados.modalidade === 'entrega' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Entrega em domicílio</span></label>' +
             '</div>' +
@@ -305,6 +302,8 @@ window.SS = window.SS || {};
             '</div>' +
           '</div></div>';
       } else if (passo === 3) {
+        var subEnc3 = subtotalItens(); var entEnc3 = valorEntrega(); var totalEnc3 = totalEstimado(); var sobEnc3 = temSobConsulta();
+        var resumoEnc3 = '<div class="panel" style="margin-top:18px;background:#fffdf9;border:1.5px solid var(--line)"><h3 style="font-size:15px;font-weight:800;margin:0 0 12px">Resumo da encomenda</h3><div>' + (itens.length? itens.map(function(it){ var p=obterProduto(it.id); var opts=descricaoOpcoesEncomenda(it); var unit=precoUnitarioEncomenda(it); return '<div class="order-summary-item"><div class="order-summary-item__body"><div class="order-summary-item__name">'+it.qty+'x '+u.esc(p?p.nome:it.id)+'</div>'+(opts?'<div class="order-summary-item__opts">'+u.esc(opts)+'</div>':'')+'</div><div class="order-summary-item__price">'+(unit!==null?u.fmtBRL(unit*it.qty):'Sob consulta')+'</div></div>'; }).join('') : '<p class="text-sm text-muted">Nenhum produto selecionado ainda.</p>') + '</div><div class="summary-totals" style="margin-top:12px"><div class="row"><span>Subtotal</span><span>'+u.fmtBRL(subEnc3)+'</span></div><div class="row"><span>Entrega</span><span>'+(entEnc3===null?'a confirmar':u.fmtBRL(entEnc3))+'</span></div><div class="row total"><span>Total estimado</span><span>'+(totalEnc3===null?'a confirmar':u.fmtBRL(totalEnc3))+'</span></div></div>'+(sobEnc3?'<p class="text-sm text-muted mt-2"><iconify-icon icon="ph:warning-circle" width="15" height="15" style="vertical-align:-2px"></iconify-icon> Alguns itens têm valor sob consulta — total será confirmado pela loja.</p>':'')+'</div>';
         html =
           '<div class="panel"><h2><span class="n">3</span> Pagamento</h2><div class="panel__body">' +
             '<p class="form-hint mb-2">Escolha o momento e a forma de pagamento. Para encomendas, o pagamento antecipado pode ser solicitado pela loja.</p>' +
@@ -316,6 +315,7 @@ window.SS = window.SS || {};
               SS.pagamento.renderControles(dados) +
               '<div class="form-error">Escolha a forma de pagamento.</div>' +
             '</div>' +
+            resumoEnc3 +
             '<div class="form-group mt-3"><label class="form-label" for="f-obs">Observações gerais</label><textarea class="form-control" id="f-obs" rows="2" placeholder="Tema, cores, referências, detalhes da festa…">' + u.esc(dados.observacoes) + '</textarea></div>' +
             '<button type="button" class="btn btn--whatsapp btn--lg btn--block mt-3" id="btn-simular-pagamento">Simular pagamento</button>' +
           '</div></div>';
@@ -367,7 +367,7 @@ window.SS = window.SS || {};
       } else if (passo === 3) {
         html =
           '<div class="panel"><h2><span class="n">3</span> Retirada ou entrega</h2><div class="panel__body">' +
-            '<div class="opts">' +
+            '<div class="opts opts--2col">' +
               '<label class="opt' + (dados.modalidade === 'retirada' ? ' selected' : '') + '"><input type="radio" name="modalidade" value="retirada"' + (dados.modalidade === 'retirada' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Retirada no local</span></label>' +
               '<label class="opt' + (dados.modalidade === 'entrega' ? ' selected' : '') + '"><input type="radio" name="modalidade" value="entrega"' + (dados.modalidade === 'entrega' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Entrega em domicílio</span></label>' +
             '</div>' +
@@ -384,6 +384,8 @@ window.SS = window.SS || {};
             '</div>' +
           '</div></div>';
       } else if (passo === 4) {
+        var subEnc4 = subtotalItens(); var entEnc4 = valorEntrega(); var totalEnc4 = totalEstimado(); var sobEnc4 = temSobConsulta();
+        var resumoEnc4 = '<div class="panel" style="margin-top:18px;background:#fffdf9;border:1.5px solid var(--line)"><h3 style="font-size:15px;font-weight:800;margin:0 0 12px">Resumo da encomenda</h3><div>' + (itens.length? itens.map(function(it){ var p=obterProduto(it.id); var opts=descricaoOpcoesEncomenda(it); var unit=precoUnitarioEncomenda(it); return '<div class="order-summary-item"><div class="order-summary-item__body"><div class="order-summary-item__name">'+it.qty+'x '+u.esc(p?p.nome:it.id)+'</div>'+(opts?'<div class="order-summary-item__opts">'+u.esc(opts)+'</div>':'')+'</div><div class="order-summary-item__price">'+(unit!==null?u.fmtBRL(unit*it.qty):'Sob consulta')+'</div></div>'; }).join('') : '<p class="text-sm text-muted">Nenhum produto selecionado ainda.</p>') + '</div><div class="summary-totals" style="margin-top:12px"><div class="row"><span>Subtotal</span><span>'+u.fmtBRL(subEnc4)+'</span></div><div class="row"><span>Entrega</span><span>'+(entEnc4===null?'a confirmar':u.fmtBRL(entEnc4))+'</span></div><div class="row total"><span>Total estimado</span><span>'+(totalEnc4===null?'a confirmar':u.fmtBRL(totalEnc4))+'</span></div></div>'+(sobEnc4?'<p class="text-sm text-muted mt-2"><iconify-icon icon="ph:warning-circle" width="15" height="15" style="vertical-align:-2px"></iconify-icon> Alguns itens têm valor sob consulta — total será confirmado pela loja.</p>':'')+'</div>';
         html =
           '<div class="panel"><h2><span class="n">4</span> Pagamento</h2><div class="panel__body">' +
             '<p class="form-hint mb-2">Escolha o momento e a forma de pagamento. Para encomendas, o pagamento antecipado pode ser solicitado pela loja.</p>' +
@@ -395,6 +397,7 @@ window.SS = window.SS || {};
               SS.pagamento.renderControles(dados) +
               '<div class="form-error">Escolha a forma de pagamento.</div>' +
             '</div>' +
+            resumoEnc4 +
             '<div class="form-group mt-3"><label class="form-label" for="f-obs">Observações gerais</label><textarea class="form-control" id="f-obs" rows="2" placeholder="Tema, cores, referências, detalhes da festa…">' + u.esc(dados.observacoes) + '</textarea></div>' +
             '<button type="button" class="btn btn--whatsapp btn--lg btn--block mt-3" id="btn-simular-pagamento">Simular pagamento</button>' +
           '</div></div>';
