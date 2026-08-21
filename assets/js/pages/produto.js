@@ -195,12 +195,11 @@ window.SS = window.SS || {};
     var main = galeria[0] || '';
     var thumbs = galeria.map(function (src, i) { return '<button type="button" class="' + (i === 0 ? 'active' : '') + '" data-gal="' + i + '" aria-label="Ver imagem ' + (i + 1) + '"><img src="' + u.esc(src) + '" alt="' + u.esc(produto.nome) + ' — foto ' + (i + 1) + '" loading="lazy"></button>'; }).join('');
     var esgotado = !!produto.esgotado;
-    var isAgendamento = produto.encomenda && !produto.prontaEntrega;
-    var podeAdicionar = !esgotado && !semPreco && !isAgendamento;
+    var podeAdicionar = !esgotado;
     el.innerHTML =
       '<div class="prod-grid">' +
         '<div class="gallery reveal"><div class="gallery__main">' + (main ? '<img id="gal-main" src="' + u.esc(main) + '" alt="' + u.esc(produto.nome) + '">' : '<div style="width:100%;height:100%;display:grid;place-items:center;color:var(--muted)">Sem foto</div>') + '</div>' + (thumbs ? '<div class="gallery__thumbs">' + thumbs + '</div>' : '') + '</div>' +
-        '<div class="prod-info reveal"><div class="product-card__badges" style="position:static;margin-bottom:10px">' + selos + '</div><h1 class="prod-info__title">' + u.esc(produto.nome) + '</h1><a class="prod-info__cat text-sm" href="index.html#cat-' + encodeURIComponent(produto.categoria) + '" style="color:var(--rose-600);font-weight:700">' + u.esc(SS.catalog.db.getCategoriaNome(produto.categoria)) + '</a><p class="prod-info__desc">' + u.esc(produto.descricao || '') + '</p><div class="prod-info__price" id="p-preco"></div><ul class="prod-info__meta"><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>' + (produto.prontaEntrega ? 'Disponível para pronta entrega (confirme a disponibilidade do dia pelo WhatsApp).' : 'Produzido sob encomenda — ' + (produto.prazoProducaoDias || 0) + ' dia' + ((produto.prazoProducaoDias || 0) === 1 ? '' : 's') + ' de antecedência mínima.') + '</span></li>' + (produto.conservacao ? '<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Conservação: ' + u.esc(produto.conservacao) + '</span></li>' : '') + '<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span>Pedido enviado pelo WhatsApp e confirmado pela loja.</span></li></ul><div id="prod-opcoes"></div><div class="prod-actions">' + (esgotado ? '<button type="button" class="btn btn--outline btn--lg" disabled>Produto esgotado</button>' : podeAdicionar ? '<button type="button" class="btn btn--primary btn--lg" id="btn-add-cart">Adicionar ao carrinho</button><button type="button" class="btn btn--dark btn--lg" id="btn-buy-now">Comprar agora</button>' : '<a class="btn btn--primary btn--lg w-full" href="encomendaagendada.html?produto=' + encodeURIComponent(produto.id) + '">Encomendar este produto</a>') + '</div><p class="text-sm text-muted mt-2">Entrega: ' + u.esc(SS.config.loja.entrega.nota) + '</p></div>' +
+        '<div class="prod-info reveal"><div class="product-card__badges" style="position:static;margin-bottom:10px">' + selos + '</div><h1 class="prod-info__title">' + u.esc(produto.nome) + '</h1><a class="prod-info__cat text-sm" href="index.html#cat-' + encodeURIComponent(produto.categoria) + '" style="color:var(--rose-600);font-weight:700">' + u.esc(SS.catalog.db.getCategoriaNome(produto.categoria)) + '</a><p class="prod-info__desc">' + u.esc(produto.descricao || '') + '</p><div class="prod-info__price" id="p-preco"></div><ul class="prod-info__meta"><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>' + (produto.prontaEntrega ? 'Disponível para pronta entrega (confirme a disponibilidade do dia pelo WhatsApp).' : 'Produzido sob encomenda — ' + (produto.prazoProducaoDias || 0) + ' dia' + ((produto.prazoProducaoDias || 0) === 1 ? '' : 's') + ' de antecedência mínima.') + '</span></li>' + (produto.conservacao ? '<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Conservação: ' + u.esc(produto.conservacao) + '</span></li>' : '') + '<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span>Pedido enviado pelo WhatsApp e confirmado pela loja.</span></li></ul><div id="prod-opcoes"></div><div class="prod-actions">' + (esgotado ? '<button type="button" class="btn btn--outline btn--lg" disabled>Produto esgotado</button>' : '<button type="button" class="btn btn--primary btn--lg" id="btn-add-cart">Adicionar ao carrinho</button><button type="button" class="btn btn--dark btn--lg" id="btn-buy-now">Comprar agora</button>') + '</div><p class="text-sm text-muted mt-2">Entrega: ' + u.esc(SS.config.loja.entrega.nota) + '</p></div>' +
       '</div>';
     el.querySelectorAll('[data-gal]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -210,22 +209,7 @@ window.SS = window.SS || {};
         el.querySelectorAll('[data-gal]').forEach(function (x) { x.classList.toggle('active', x === b); });
       });
     });
-    var encLink = el.querySelector('a[href^="encomenda.html"]');
-    if (encLink) encLink.addEventListener('click', function () { try { sessionStorage.setItem('ss_encomenda_produto', produto.id); } catch (e) {} });
-    // Intercepta clique no botão "Encomendar este produto" (produto agendado) para também adicionar ao carrinho (carrinho misto)
-    var encBtn = el.querySelector('a[href^="encomendaagendada.html"]');
-    if (encBtn) encBtn.addEventListener('click', function (e) {
-      try {
-        // coleta seleção atual se houver opções renderizadas, senão envia seleção vazia (será configurada em encomendaagendada)
-        var selEnc = sel && sel.variacoes !== undefined ? sel : { variacoes: {}, adicionais: [], qty: Math.max(1, produto.quantidadeMinima || 1), observacao: '' };
-        // se produto tem opções mas não renderizou (caso agendamento), garante quantidade mínima
-        if (!selEnc.qty) selEnc.qty = Math.max(1, produto.quantidadeMinima || 1);
-        var obsEl = document.getElementById('obs-input');
-        if (obsEl) selEnc.observacao = obsEl.value.trim();
-        else if (document.getElementById('qty-input')) selEnc.qty = Math.max(produto.quantidadeMinima || 1, Number(document.getElementById('qty-input').value) || 1);
-        SS.cart.adicionar(produto, { variacoes: selEnc.variacoes || {}, adicionais: selEnc.adicionais || [], qty: selEnc.qty, observacao: selEnc.observacao || '' });
-      } catch (e2) {}
-    });
+
     if (podeAdicionar) {
       renderOpcoes(); renderPreco();
       document.getElementById('btn-add-cart').addEventListener('click', function () {

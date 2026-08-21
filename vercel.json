@@ -1,7 +1,6 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/encomendaagendada", "destination": "/encomendaagendada.html" },
     { "source": "/encomenda", "destination": "/encomenda.html" },
     { "source": "/bolo-personalizado", "destination": "/bolo-personalizado.html" },
     { "source": "/carrinho", "destination": "/carrinho.html" },

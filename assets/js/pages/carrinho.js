@@ -236,7 +236,7 @@ window.SS = window.SS || {};
           '</div>'
         );
       }).join('') +
-      (sobConsulta ? '<p class="text-sm text-muted mt-2"><iconify-icon icon="ph:warning-circle" width="15" height="15" style="vertical-align:-2px"></iconify-icon> Itens sem preço (sob consulta) não podem ser finalizados como pedido rápido. Remova-os e utilize a <a href="encomenda.html" style="color:var(--rose-600);font-weight:700">encomenda</a>.</p>' : '');
+      (sobConsulta ? '<p class="text-sm text-muted mt-2"><iconify-icon icon="ph:warning-circle" width="15" height="15" style="vertical-align:-2px"></iconify-icon> Itens com valor sob consulta terão o total confirmado pela loja no WhatsApp. Você pode finalizar normalmente.</p>' : '');
 
     el.querySelectorAll('[data-qtd]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -359,8 +359,6 @@ window.SS = window.SS || {};
   /* -------------------------- VALIDAÇÃO ----------------------------- */
   function validarPasso() {
     if (passo === 1) {
-      var sob = SS.cart.temItensSobConsulta();
-      if (sob) { SS.ui.toast('Remova os itens "sob consulta" antes de finalizar o pedido rápido.', 'error'); return false; }
       if (!SS.cart.getItens().length) { SS.ui.toast('Seu carrinho está vazio.', 'error'); return false; }
       return true;
     }

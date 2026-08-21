@@ -30,8 +30,7 @@ window.SS = window.SS || {};
 
   function render(p) {
     var semPreco = p.precoSobConsulta || p.preco === null || p.preco === undefined;
-    var isAgendamento = p.encomenda && !p.prontaEntrega;
-    var podeAdd = !semPreco && !p.esgotado && !isAgendamento;
+    var podeAdd = !p.esgotado && !semPreco;
     var nomeCat = SS.catalog.db.getCategoriaNome(p.categoria) || 'Nossos doces';
     var imgSrc = (p.imagens && p.imagens.length) ? p.imagens[0] : '';
     var quickLabel = podeAdd ? 'Ver detalhes' : (p.esgotado ? 'Ver detalhes' : 'Consultar valores');
@@ -52,7 +51,7 @@ window.SS = window.SS || {};
               ? '<button type="button" class="btn btn--outline btn--sm product-card__detail" data-quick="' + u.esc(p.id) + '">Ver detalhes</button>'
               : podeAdd
                 ? '<button type="button" class="btn btn--primary btn--sm product-card__add" data-add="' + u.esc(p.id) + '" aria-label="Adicionar ' + u.esc(p.nome) + ' ao carrinho">' + ICON_CART + '<span>Adicionar</span></button>'
-                : (semPreco || isAgendamento)
+                : semPreco
                   ? '<button type="button" class="btn btn--primary btn--sm" data-quick="' + u.esc(p.id) + '">Encomendar</button>'
                   : '<button type="button" class="btn btn--outline btn--sm product-card__detail" data-quick="' + u.esc(p.id) + '">Ver detalhes</button>') +
           '</div>' +
@@ -249,10 +248,9 @@ window.SS = window.SS || {};
     fecharModalProduto();
     var semPreco = p.precoSobConsulta || p.preco === null || p.preco === undefined;
     var esgotado = !!p.esgotado;
-    var isAgendamento = p.encomenda && !p.prontaEntrega;
     var grupos = (!esgotado) ? montarGrupos(p) : [];
     var hasOpcoes = grupos.length > 0 || (p.adicionais && p.adicionais.length);
-    var podeAdicionar = !esgotado && !semPreco && !isAgendamento;
+    var podeAdicionar = !esgotado;
     var sel = { variacoes: {}, adicionais: [], qty: Math.max(1, p.quantidadeMinima || 1), observacao: '' };
     grupos.forEach(function (g) {
       if (isCheckboxGroup(g)) sel.variacoes[g.id] = [];
@@ -278,7 +276,7 @@ window.SS = window.SS || {};
             '</div>' +
           '</div>' +
           '<div class="modal__foot">' +
-            (esgotado ? '<button type="button" class="btn btn--outline btn--lg" disabled>Produto esgotado</button>' : podeAdicionar ? '<button type="button" class="btn btn--primary btn--lg" id="pm-add">Adicionar ao carrinho</button>' : '<button type="button" class="btn btn--primary btn--lg" id="pm-encomendar">Encomendar este produto</button>') +
+            (esgotado ? '<button type="button" class="btn btn--outline btn--lg" disabled>Produto esgotado</button>' : '<button type="button" class="btn btn--primary btn--lg" id="pm-add">Adicionar ao carrinho</button>') +
           '</div>' +
         '</div>' +
       '</div>';
@@ -297,53 +295,25 @@ window.SS = window.SS || {};
       renderModalPreco(p, grupos, sel, overlay);
       var obsEl = overlay.querySelector('#pm-obs');
       if (obsEl) obsEl.addEventListener('input', function () { var c=overlay.querySelector('#pm-count'); if(c) c.textContent = this.value.length + ' / 140'; });
-      if (podeAdicionar) {
-        var addBtn = overlay.querySelector('#pm-add');
-        if (addBtn) addBtn.addEventListener('click', function () {
-          var faltando = grupos.filter(function (g) {
-            var n = selArray(g, sel).length;
-            if (g.obrigatoria && n < g.min) return true;
-            if (n > g.max) return true;
-            return false;
-          });
-          if (faltando.length) {
-            SS.ui.toast('Selecione: ' + faltando.map(function (g) { return g.nome + ' (' + g.min + '-' + g.max + ')'; }).join(', '), 'error');
-            return;
-          }
-          sel.qty = Math.max(p.quantidadeMinima || 1, Number(overlay.querySelector('#pm-qty').value) || 1);
-          sel.observacao = overlay.querySelector('#pm-obs') ? overlay.querySelector('#pm-obs').value.trim() : '';
-          SS.cart.adicionar(p, { variacoes: sel.variacoes, adicionais: sel.adicionais, qty: sel.qty, observacao: sel.observacao });
-          SS.ui.toast(p.nome + ' adicionado ao carrinho!');
-          fechar();
-          if (SS.ui.toggleCart) SS.ui.toggleCart(true);
+      var addBtn = overlay.querySelector('#pm-add');
+      if (addBtn) addBtn.addEventListener('click', function () {
+        var faltando = grupos.filter(function (g) {
+          var n = selArray(g, sel).length;
+          if (g.obrigatoria && n < g.min) return true;
+          if (n > g.max) return true;
+          return false;
         });
-      } else {
-        var encBtn = overlay.querySelector('#pm-encomendar');
-        if (encBtn) encBtn.addEventListener('click', function () {
-          var faltandoEnc = grupos.filter(function (g) {
-            var n = selArray(g, sel).length;
-            if (g.obrigatoria && n < g.min) return true;
-            if (n > g.max) return true;
-            return false;
-          });
-          if (faltandoEnc.length) {
-            SS.ui.toast('Selecione: ' + faltandoEnc.map(function (g) { return g.nome + ' (' + g.min + '-' + g.max + ')'; }).join(', '), 'error');
-            return;
-          }
-          sel.qty = Math.max(p.quantidadeMinima || 1, Number(overlay.querySelector('#pm-qty') ? overlay.querySelector('#pm-qty').value : sel.qty) || 1);
-          sel.observacao = overlay.querySelector('#pm-obs') ? overlay.querySelector('#pm-obs').value.trim() : '';
-          try {
-            sessionStorage.setItem('ss_encomenda_produto', p.id);
-            sessionStorage.setItem('ss_encomenda_selecao', JSON.stringify(sel));
-          } catch (e) {}
-          // Carrinho misto: produto agendado também vai para o carrinho para entrega unificada no dia agendado
-          try {
-            SS.cart.adicionar(p, { variacoes: sel.variacoes, adicionais: sel.adicionais, qty: sel.qty, observacao: sel.observacao });
-            SS.ui.toast(p.nome + ' adicionado à encomenda e ao carrinho — tudo será entregue no dia agendado', '');
-          } catch (e2) {}
-          location.href = 'encomendaagendada.html?produto=' + encodeURIComponent(p.id);
-        });
-      }
+        if (faltando.length) {
+          SS.ui.toast('Selecione: ' + faltando.map(function (g) { return g.nome + ' (' + g.min + '-' + g.max + ')'; }).join(', '), 'error');
+          return;
+        }
+        sel.qty = Math.max(p.quantidadeMinima || 1, Number(overlay.querySelector('#pm-qty') ? overlay.querySelector('#pm-qty').value : sel.qty) || 1);
+        sel.observacao = overlay.querySelector('#pm-obs') ? overlay.querySelector('#pm-obs').value.trim() : '';
+        SS.cart.adicionar(p, { variacoes: sel.variacoes, adicionais: sel.adicionais, qty: sel.qty, observacao: sel.observacao });
+        SS.ui.toast(p.nome + ' adicionado ao carrinho!');
+        fechar();
+        if (SS.ui.toggleCart) SS.ui.toggleCart(true);
+      });
     } else {
       var pr2 = overlay.querySelector('#pm-preco');
       if (pr2) pr2.innerHTML = semPreco ? '<span class="p-now">Valor sob consulta</span>' : '<span class="p-now">' + u.fmtBRL(p.preco) + '</span>';
@@ -388,12 +358,6 @@ window.SS = window.SS || {};
       if (SS.ui.toggleCart) SS.ui.toggleCart(true);
     });
   }
-
-  // fallback: guarda último produto clicado para agendada (caso query seja perdida)
-  document.addEventListener('click', function (e) {
-    var a = e.target.closest('a[href*="encomendaagendada.html?produto"]');
-    if (a) { try { var u2 = new URL(a.href, location.origin); var pid = u2.searchParams.get('produto'); if (pid) sessionStorage.setItem('ss_encomenda_produto', pid); } catch (err) {} }
-  });
 
   SS.card = { render: render, initContainer: initContainer, abrirModalProduto: abrirModalProduto };
 })(window.SS);

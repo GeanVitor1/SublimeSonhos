@@ -32,8 +32,7 @@ window.SS = window.SS || {};
 
   /* Calcula o preço unitário de um produto com base na seleção feita.
      Retorna null quando o produto não tem preço definido (sob consulta) —
-     encomendas com valor sob consulta não podem ser finalizadas como
-     pedido rápido (carrinho); devem usar encomenda.html. */
+     itens sob consulta vão para o carrinho com total "a confirmar". */
   function calcularPrecoUnitario(produto, selecao) {
     if (produto.preco === null || produto.preco === undefined || produto.precoSobConsulta) {
       return null;

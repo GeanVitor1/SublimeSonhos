@@ -30,45 +30,7 @@ window.SS = window.SS || {};
   var selUnico = { variacoes: {}, adicionais: [], qty: 1, obs: '' };
   var gruposUnico = [];
 
-  function detectarProdutoFixo() {
-    try {
-      var isAgendada = location.pathname.indexOf('encomendaagendada') !== -1;
-      if (!isAgendada) return;
-      var params = new URLSearchParams(location.search);
-      var pid = params.get('produto') || params.get('id') || params.get('slug') || params.get('p') || params.get('produtoId');
-      if (!pid) { try { pid = sessionStorage.getItem('ss_encomenda_produto'); } catch (e2) {} }
-      if (!pid && document.referrer) {
-        try {
-          var refUrl = new URL(document.referrer, location.origin);
-          var refSlug = refUrl.searchParams.get('slug');
-          if (refSlug) pid = refSlug;
-        } catch (e3) {}
-      }
-      if (!pid) return;
-      var pp = SS.catalog.db.getProduto(pid);
-      if (pp && pp.ativo && !pp.esgotado) {
-        produtoFixo = pp;
-        modoUnico = true;
-        TOTAIS = 4;
-        gruposUnico = montarGruposUnico(pp);
-        gruposUnico.forEach(function (g) { if (isCheckboxGroupUnico(g)) selUnico.variacoes[g.id] = []; });
-        selUnico.qty = Math.max(1, pp.quantidadeMinima || 1);
-        try {
-          var stored = sessionStorage.getItem('ss_encomenda_selecao');
-          if (stored) {
-            var obj = JSON.parse(stored);
-            if (obj && obj.variacoes) selUnico.variacoes = obj.variacoes;
-            if (obj && obj.adicionais) selUnico.adicionais = obj.adicionais;
-            if (obj && obj.qty) selUnico.qty = Math.max(1, Number(obj.qty) || selUnico.qty);
-            if (obj && obj.observacao !== undefined) selUnico.obs = obj.observacao;
-            else if (obj && obj.obs !== undefined) selUnico.obs = obj.obs;
-          }
-        } catch (e4) {}
-        /* pré-preenche itens para resumo/prazo */
-        itens = [{ id: pp.id, qty: selUnico.qty, obs: selUnico.obs || '', variacoes: selUnico.variacoes, adicionais: selUnico.adicionais }];
-      }
-    } catch (e) {}
-  }
+  function detectarProdutoFixo() { return; }
 
   function isModoUnico() { return modoUnico && produtoFixo; }
   function getTotais() { return isModoUnico() ? 4 : 5; }
@@ -185,13 +147,7 @@ window.SS = window.SS || {};
 
   function render() {
     var el = document.getElementById('enc-conteudo');
-    var isAgendadaPage = location.pathname.indexOf('encomendaagendada') !== -1;
-    if (isAgendadaPage && !isModoUnico()) {
-      el.innerHTML =
-        '<div class="empty-state"><div class="empty-state__ico" aria-hidden="true"><iconify-icon icon="ph:calendar-blank" width="52" height="52"></iconify-icon></div><h2>Nenhum produto selecionado</h2><p>Escolha um produto na página inicial e clique em <strong>Encomendar</strong> para agendar. Você também pode fazer uma encomenda com vários itens em <a href="encomenda.html" style="color:var(--rose-600);font-weight:700">/encomenda</a>.</p><a class="btn btn--primary mt-3" href="index.html#destaques">Ver produtos</a></div>';
-      return;
-    }
-    TOTAIS = getTotais();
+    TOTAIS = 5;
     if (passo > TOTAIS) passo = TOTAIS;
     var passos = [];
     for (var i = 1; i <= TOTAIS; i++) {
