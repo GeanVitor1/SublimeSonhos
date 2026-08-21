@@ -33,12 +33,24 @@ window.SS = window.SS || {};
   /* Calcula o preço unitário de um produto com base na seleção feita.
      Retorna null quando o produto não tem preço definido (sob consulta). */
   function calcularPrecoUnitario(produto, selecao) {
-    if (produto.preco === null || produto.preco === undefined) return null;
+    if (produto.preco === null || produto.preco === undefined) {
+      var extras0 = 0;
+      Object.keys(selecao.variacoes || {}).forEach(function (k) {
+        var v = selecao.variacoes[k];
+        var arr = Array.isArray(v) ? v : (v && v.nome ? [v] : []);
+        arr.forEach(function (it) { if (it.acrescimo) extras0 += Number(it.acrescimo) || 0; });
+      });
+      (selecao.adicionais || []).forEach(function (nome) {
+        var extra = (produto.adicionais || []).filter(function (a) { return a.nome === nome; })[0];
+        if (extra && extra.preco) extras0 += Number(extra.preco) || 0;
+      });
+      return extras0 > 0 ? extras0 : null;
+    }
     var preco = produto.preco;
-    var variacoes = selecao.variacoes || {};
-    Object.keys(variacoes).forEach(function (k) {
-      var v = variacoes[k];
-      if (v && v.acrescimo) preco += Number(v.acrescimo) || 0;
+    Object.keys(selecao.variacoes || {}).forEach(function (k) {
+      var v = selecao.variacoes[k];
+      var arr = Array.isArray(v) ? v : (v && v.nome ? [v] : []);
+      arr.forEach(function (it) { if (it.acrescimo) preco += Number(it.acrescimo) || 0; });
     });
     (selecao.adicionais || []).forEach(function (nome) {
       var extra = (produto.adicionais || []).filter(function (a) { return a.nome === nome; })[0];
@@ -113,7 +125,8 @@ window.SS = window.SS || {};
     var partes = [];
     Object.keys(item.variacoes || {}).forEach(function (k) {
       var v = item.variacoes[k];
-      if (v && v.nome) partes.push(v.nome);
+      var arr = Array.isArray(v) ? v : (v && v.nome ? [v] : []);
+      arr.forEach(function (it) { if (it.nome) partes.push(it.nome); });
     });
     (item.adicionais || []).forEach(function (a) { partes.push('+ ' + a); });
     return partes.join(' · ');

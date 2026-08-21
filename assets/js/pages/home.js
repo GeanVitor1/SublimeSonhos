@@ -55,18 +55,17 @@ window.SS = window.SS || {};
     });
   }
 
-  /* Executa a renderização real após exibir os skeletons por um instante. */
+  /* Renderização: skeleton só quando necessário; sem delay artificial para dados locais. */
   function renderComSkeleton(grid, skeletonHtml, fn, erroMsg) {
     if (!grid) return;
-    grid.innerHTML = skeletonHtml;
-    setTimeout(function () {
-      try {
-        fn();
-      } catch (e) {
-        logErro(erroMsg, e);
-        estadoErro(grid, 'Tente novamente em instantes. Se o problema persistir, fale conosco pelo WhatsApp.', fn);
-      }
-    }, 320);
+    try {
+      fn();
+      // Se fn não preencheu nada (ex: erro silencioso), exibe skeleton como fallback
+      if (!grid.innerHTML.trim()) grid.innerHTML = skeletonHtml;
+    } catch (e) {
+      logErro(erroMsg, e);
+      estadoErro(grid, 'Tente novamente em instantes. Se o problema persistir, fale conosco pelo WhatsApp.', fn);
+    }
   }
 
   /* ------------------------------------------------------------------ */
@@ -116,7 +115,7 @@ window.SS = window.SS || {};
       var itens = produtos.filter(function (p) { return p.categoria === c.id; });
       var count = itens.length;
       return (
-        '<section class="cat-secao reveal" id="cat-' + encodeURIComponent(c.id) + '" aria-labelledby="cat-' + encodeURIComponent(c.id) + '-titulo">' +
+        '<section class="cat-secao" id="cat-' + encodeURIComponent(c.id) + '" aria-labelledby="cat-' + encodeURIComponent(c.id) + '-titulo">' +
           '<div class="cat-secao__head">' +
             '<h3 class="cat-secao__titulo" id="cat-' + encodeURIComponent(c.id) + '-titulo">' +
               '<span class="cat-secao__icone" aria-hidden="true"><iconify-icon icon="ph:' + (c.icone || 'cookie') + '" width="20" height="20"></iconify-icon></span>' +
@@ -125,21 +124,16 @@ window.SS = window.SS || {};
             (c.descricao ? '<p class="cat-secao__desc">' + u.esc(c.descricao) + '</p>' : '') +
             '<span class="cat-secao__count">' + count + ' produto' + (count === 1 ? '' : 's') + '</span>' +
           '</div>' +
-          '<div class="grid-products" id="grid-' + encodeURIComponent(c.id) + '">' + skeletonProduto(Math.min(count, 4)) + '</div>' +
+          '<div class="grid-products" id="grid-' + encodeURIComponent(c.id) + '">' + itens.map(SS.card.render).join('') + '</div>' +
         '</section>'
       );
     }).join('');
 
-    /* Renderiza os cards de cada grade de categoria. */
     cats.forEach(function (c) {
       var grid = document.getElementById('grid-' + c.id);
-      if (!grid) return;
-      var itens = produtos.filter(function (p) { return p.categoria === c.id; });
-      grid.innerHTML = itens.map(SS.card.render).join('');
-      SS.card.initContainer(grid);
+      if (grid) SS.card.initContainer(grid);
     });
 
-    SS.ui.observeReveal(container);
     initScrollspy();
   }
 

@@ -221,18 +221,16 @@ window.SS = window.SS || {};
   /* -------------------------- ETAPA 1 ------------------------------- */
   function initPassoData() {
     var d = document.getElementById('f-data');
+    // digitação livre: apenas salva o valor, sem bloquear/limpar
+    // a validação de prazo mínimo acontece em validarPasso() ao clicar em Continuar
     d.addEventListener('change', function () {
       dados.data = d.value;
       document.getElementById('g-data').classList.remove('invalid');
-      var dt = u.dataDeInput(d.value);
-      if (dt) {
-        var min = u.addDias(new Date(), prazoMinimoDias());
-        if (dt < min) {
-          d.value = '';
-          dados.data = '';
-          SS.ui.toast('A data mínima para esta encomenda é ' + u.fmtData(min) + '.', 'error');
-        }
-      }
+    });
+    d.addEventListener('input', function () {
+      // mantém dados.data sincronizado enquanto digita, sem validação agressiva
+      dados.data = d.value;
+      if (d.value) document.getElementById('g-data').classList.remove('invalid');
     });
     var h = document.getElementById('f-hora');
     h.addEventListener('change', function () { dados.hora = h.value; document.getElementById('g-hora').classList.remove('invalid'); });
@@ -452,9 +450,19 @@ window.SS = window.SS || {};
     if (passo === 1) {
       var ok = true;
       if (!dados.data) { document.getElementById('g-data').classList.add('invalid'); ok = false; }
+      else {
+        // valida prazo mínimo sem limpar o campo enquanto digita
+        var dt = u.dataDeInput(dados.data);
+        var min = u.dataDeInput(dataMinimaISO());
+        if (dt && min && dt < min) {
+          document.getElementById('g-data').classList.add('invalid');
+          SS.ui.toast('A data mínima para esta encomenda é ' + u.fmtData(min) + '.', 'error');
+          ok = false;
+        }
+      }
       if (!dados.hora) { document.getElementById('g-hora').classList.add('invalid'); ok = false; }
       if (!dados.evento) { document.getElementById('g-evento').classList.add('invalid'); ok = false; }
-      if (!ok) SS.ui.toast('Preencha data, horário e tipo de evento.', 'error');
+      if (!ok && !dados.data) SS.ui.toast('Preencha data, horário e tipo de evento.', 'error');
       return ok;
     }
     if (passo === 2) {

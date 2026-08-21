@@ -48,7 +48,7 @@ window.SS = window.SS || {};
         '</a>' +
         '<nav class="main-nav" aria-label="Navegação principal">' + nav + '</nav>' +
         '<div class="header-actions">' +
-          '<a class="btn btn--dark btn--sm" href="encomenda.html">Fazer pedido</a>' +
+          '<a class="btn btn--dark btn--sm btn--cta-mobile" href="encomenda.html">Fazer pedido</a>' +
           '<button type="button" class="cart-btn" aria-label="Abrir carrinho" data-open-cart>' + ICON_CART + '<span class="cart-count" aria-hidden="true"></span></button>' +
           '<button type="button" class="hamburger" aria-label="Abrir menu" data-open-menu>' + ICON_BURGER + '</button>' +
         '</div>' +

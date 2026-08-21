@@ -35,7 +35,18 @@ window.SS = window.SS || {};
     obrigatorios.forEach(function (id) {
       if (!lerCampo('f-' + id)) { marcarInvalido(id); ok = false; }
     });
-    if (!ok) { SS.ui.toast('Preencha os campos obrigatórios marcados em vermelho.', 'error'); return false; }
+    // valida prazo mínimo sem travar digitação: só no envio
+    var dataVal = lerCampo('f-data');
+    if (dataVal) {
+      var dt = u.dataDeInput(dataVal);
+      var minMid = u.dataDeInput(document.getElementById('f-data').min);
+      if (dt && minMid && dt < minMid) {
+        marcarInvalido('data');
+        SS.ui.toast('Escolha uma data com no mínimo 3 dias de antecedência.', 'error');
+        ok = false;
+      }
+    }
+    if (!ok) { if (!document.querySelector('.invalid')) SS.ui.toast('Preencha os campos obrigatórios marcados em vermelho.', 'error'); return false; }
     return true;
   }
 
@@ -101,17 +112,18 @@ window.SS = window.SS || {};
   document.addEventListener('DOMContentLoaded', function () {
     SS.catalog.db.aplicarConfiguracoes();
 
-    var min = u.addDias(new Date(), 3);
+    var hojeMeiaNoite = new Date(); hojeMeiaNoite.setHours(0,0,0,0);
+    var min = u.addDias(hojeMeiaNoite, 3);
+    var minISO = u.dataParaInput(min);
     var dataEl = document.getElementById('f-data');
     if (dataEl) {
-      dataEl.min = u.dataParaInput(min);
+      dataEl.min = minISO;
+      // digitação livre: não apaga/limpa no change, validação só no envio
       dataEl.addEventListener('change', function () {
-        var dt = u.dataDeInput(dataEl.value);
-        if (dt && dt < min) {
-          dataEl.value = '';
-          SS.ui.toast('Escolha uma data com no mínimo 3 dias de antecedência.', 'error');
-        }
         document.getElementById('g-data').classList.remove('invalid');
+      });
+      dataEl.addEventListener('input', function () {
+        if (dataEl.value) document.getElementById('g-data').classList.remove('invalid');
       });
     }
 

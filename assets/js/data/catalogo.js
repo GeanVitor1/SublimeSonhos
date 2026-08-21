@@ -33,6 +33,9 @@ window.SS = window.SS || {};
   var IMG = function (slug) { return 'assets/img/produtos/' + slug + '.webp'; };
   var IMG_LIST = function (arr) { return arr.map(IMG); };
 
+  function GC(nome, min, max, obrigatoria, opcoes) { return { id: nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''), nome: nome, min: min, max: max, obrigatoria: !!obrigatoria, opcoes: opcoes }; }
+  function OP(nome, acrescimo) { return { nome: nome, acrescimo: acrescimo || 0 }; }
+
   /* ------------------------------------------------------------------ */
   /* PRODUTOS (dados iniciais de referência)                             */
   /* Descrições curtas/editáveis estão marcadas como provisórias no       */
@@ -353,8 +356,8 @@ window.SS = window.SS || {};
       descricao: 'Bolo caseiro com sabor de infância. Encomende com antecedência e consulte tamanhos e valores.',
       imagens: IMG_LIST(['bolo-caseiro']),
       preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [],
-      observacoes: 'Informe tamanho, sabor e data desejada.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
+      variacoes: [GC('Sabor', 0, 1, false, [OP('Laranja'), OP('Coco'), OP('Baunilha'), OP('Chocolate')])], sabores: [], tamanhos: [], adicionais: [],
+      observacoes: 'Escolha até 1 sabor.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
       prontaEntrega: false, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
     },
@@ -364,8 +367,8 @@ window.SS = window.SS || {};
       descricao: 'Bento cake: um bolo individual, delicado e cheio de carinho, ideal para presentear em ocasiões especiais.',
       imagens: IMG_LIST(['bento-cake']),
       preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [],
-      observacoes: 'Informe sabor, decoração e data desejada.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
+      variacoes: [GC('Recheio', 1, 1, true, [OP('Brigadeiro'), OP('Ninho')])], sabores: [], tamanhos: [], adicionais: [],
+      observacoes: 'Escolha 1 recheio.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
       prontaEntrega: false, encomenda: true, destaque: true, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
     },
@@ -375,8 +378,19 @@ window.SS = window.SS || {};
       descricao: 'Bolo decorado (30 cm) para festas e celebrações. Consulte temas, sabores e valores.',
       imagens: IMG_LIST(['bolo-decorado-30cm']),
       preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [],
-      observacoes: 'Informe tema, cor, sabor e data desejada.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
+      variacoes: [GC('Sabor', 2, 3, true, [OP('Massa de baunilha'), OP('Massa de chocolate'), OP('Massa limão', 20), OP('Massa red velvet', 25), OP('Recheio ninho'), OP('Recheio brigadeiro'), OP('Recheio: Prestígio'), OP('Coco com ameixa', 35), OP('Recheio: Abacaxi', 40), OP('Recheio: Ninho com geleia de morango', 50), OP('Recheio: Maracujá com brigadeiro', 45), OP('Recheio: Maracujá', 45), OP('Recheio: Limão', 30), OP('Recheio de Cream Cheese com geleia de morango', 70), OP('Recheio de Cream Cheese', 50)])], sabores: [], tamanhos: [], adicionais: [],
+      observacoes: 'Escolha de 2 a 3 opções.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
+      prontaEntrega: false, encomenda: true, destaque: false, ativo: true,
+      conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
+    },
+    {
+      id: 'bolo-decorado-22cm', nome: 'Bolo decorado 22 cm', categoria: 'bolos',
+      descricaoCurta: 'Bolo decorado (22 cm) para festas médias.',
+      descricao: 'Bolo decorado (22 cm) para festas médias. Consulte temas, sabores e valores.',
+      imagens: IMG_LIST(['bolo-decorado-30cm']),
+      preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'un', quantidadeMinima: 1,
+      variacoes: [GC('Sabor', 2, 3, true, [OP('Massa - Limão', 10), OP('Massa - baunilha'), OP('Massa red velvet', 10), OP('Massa - Chocolate'), OP('Recheio - Ninho'), OP('Recheio - Brigadeiro'), OP('Recheio - coco'), OP('Recheio - Ninho com geleia de morango', 20), OP('Recheio - Abacaxi', 20), OP('Recheio - Limão', 10), OP('Nutella', 15), OP('Creme cheese', 26), OP('Coco com ameixa', 15)])], sabores: [], tamanhos: [], adicionais: [],
+      observacoes: 'Escolha de 2 a 3 opções.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
       prontaEntrega: false, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
     },
@@ -386,8 +400,8 @@ window.SS = window.SS || {};
       descricao: 'Bolo decorado (15 cm), delicado e cheio de charme para ocasiões íntimas.',
       imagens: IMG_LIST(['bolo-decorado-15cm']),
       preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [],
-      observacoes: 'Informe tema, cor, sabor e data desejada.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
+      variacoes: [GC('Sabores', 1, 4, true, [OP('Recheio - Brigadeiro'), OP('Recheio: Ninho'), OP('Recheio: Coco'), OP('Recheio: Limão', 20), OP('Recheio - Casadinho'), OP('Morango', 16), OP('Geleia de morango', 10), OP('Topper com morango', 12), OP('Topper com Brigadeiro', 14), OP('Massa: chocolate'), OP('Massa: Baunilha'), OP('Massa: Limão', 10)])], sabores: [], tamanhos: [], adicionais: [],
+      observacoes: 'Escolha de 1 a 4 opções.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
       prontaEntrega: false, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
     },
@@ -419,8 +433,8 @@ window.SS = window.SS || {};
       descricao: 'Naked cake artesanal com visual rústico e elegante. Consulte tamanhos, sabores e valores.',
       imagens: IMG_LIST(['naked-cake']),
       preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [],
-      observacoes: 'Informe tamanho, sabor e data desejada.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
+      variacoes: [GC('Sabores', 1, 4, true, [OP('Recheio - Brigadeiro'), OP('Recheio: Ninho'), OP('Recheio: Coco'), OP('Recheio: Limão', 20), OP('Recheio - Casadinho'), OP('Morango', 16), OP('Geleia de morango', 10), OP('Topper com morango', 12), OP('Topper com Brigadeiro', 14), OP('Massa: chocolate'), OP('Massa: Baunilha'), OP('Massa: Limão', 10)])], sabores: [], tamanhos: [], adicionais: [],
+      observacoes: 'Escolha de 1 a 4 opções.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
       prontaEntrega: false, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
     },
@@ -430,8 +444,11 @@ window.SS = window.SS || {};
       descricao: 'Naked cake red velvet (15 cm), com massa vermelha e visual encantador para momentos especiais.',
       imagens: IMG_LIST(['naked-cake-red-velvet-15']),
       preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [],
-      observacoes: 'Informe tamanho e data desejada.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
+      variacoes: [
+        GC('Sabores — bolo e doces', 1, 5, true, [OP('Brigadeiro'), OP('Brigadeiro de leite ninho'), OP('Casadinho'), OP('Ferrero Rocher'), OP('Ninho com Nutella'), OP('Uva coberta'), OP('Bolo Chocolate - recheio casadinho'), OP('Bolo Chocolate - recheio ninho'), OP('Bolo Chocolate - recheio brigadeiro'), OP('Bolo Baunilha - recheio casadinho'), OP('Bolo Baunilha - recheio ninho'), OP('Bolo Baunilha - recheio brigadeiro')]),
+        GC('Recheios, toppers e massa', 1, 4, true, [OP('Recheio - Brigadeiro'), OP('Recheio: Ninho'), OP('Recheio: Coco'), OP('Recheio: Limão', 20), OP('Recheio - Casadinho'), OP('Morango', 16), OP('Geleia de morango', 10), OP('Topper com morango', 12), OP('Topper com Brigadeiro', 14), OP('Massa: chocolate'), OP('Massa: Baunilha'), OP('Massa: Limão', 10)])
+      ], sabores: [], tamanhos: [], adicionais: [],
+      observacoes: 'Dois grupos: 1 a 5 e 1 a 4 opções.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
       prontaEntrega: false, encomenda: true, destaque: true, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
     },
@@ -441,8 +458,8 @@ window.SS = window.SS || {};
       descricao: 'Naked cake (8 cm), tamanho delicado para ocasiões íntimas e presentinhos especiais.',
       imagens: IMG_LIST(['naked-cake-8cm']),
       preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [],
-      observacoes: 'Informe sabor e data desejada.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
+      variacoes: [GC('Sabor', 0, 1, false, [OP('Massa - chocolate'), OP('Massa - Baunilha'), OP('Recheio - Ninho'), OP('Recheio - Casadinho'), OP('Recheio - Brigadeiro')])], sabores: [], tamanhos: [], adicionais: [],
+      observacoes: 'Escolha até 1 opção.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
       prontaEntrega: false, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
     },
@@ -452,8 +469,8 @@ window.SS = window.SS || {};
       descricao: 'Naked cake (15 cm) para celebrar momentos especiais. Consulte sabores e valores.',
       imagens: IMG_LIST(['naked-cake-15cm']),
       preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [],
-      observacoes: 'Informe sabor e data desejada.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
+      variacoes: [GC('Sabores', 1, 4, true, [OP('Recheio - Brigadeiro'), OP('Recheio: Ninho'), OP('Recheio: Coco'), OP('Recheio: Limão', 20), OP('Recheio - Casadinho'), OP('Morango', 16), OP('Geleia de morango', 10), OP('Topper com morango', 12), OP('Topper com Brigadeiro', 14), OP('Massa: chocolate'), OP('Massa: Baunilha'), OP('Massa: Limão', 10)])], sabores: [], tamanhos: [], adicionais: [],
+      observacoes: 'Escolha de 1 a 4 opções.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
       prontaEntrega: false, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
     },
@@ -463,8 +480,8 @@ window.SS = window.SS || {};
       descricao: 'Mini cake para ocasiões que pedem um doce do tamanho perfeito. Consulte sabores e valores.',
       imagens: IMG_LIST(['mini-cake']),
       preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [],
-      observacoes: 'Informe sabor e data desejada.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
+      variacoes: [GC('Sabor do bolo', 1, 2, true, [OP('Massa de baunilha'), OP('Massa de chocolate'), OP('Recheio - Ninho'), OP('Recheio - Brigadeiro'), OP('Recheio - Coco'), OP('Recheio - Coco com ameixa', 6), OP('Recheio - Ninho com morango', 10), OP('Recheio - Abacaxi', 10)])], sabores: [], tamanhos: [], adicionais: [],
+      observacoes: 'Escolha de 1 a 2 opções.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
       prontaEntrega: false, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
     },
@@ -474,8 +491,11 @@ window.SS = window.SS || {};
       descricao: 'Mini bolo encanto, um doce que conquista pelo olhar. Consulte sabores e valores.',
       imagens: IMG_LIST(['mini-bolo-encanto']),
       preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [],
-      observacoes: 'Informe sabor e data desejada.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
+      variacoes: [
+        GC('Sabores — bolo e doces', 1, 5, true, [OP('Bolo Chocolate - recheio casadinho'), OP('Bolo chocolate - Recheio Brigadeiro'), OP('Bolo Chocolate - Recheio de Ninho'), OP('Bolo Baunilha - Recheio de Ninho'), OP('Bolo Baunilha - Recheio de Brigadeiro'), OP('Doces - casadinho'), OP('Doces - Ninho'), OP('Doces - Ninho com nutella'), OP('Doces - Brigadeiro'), OP('Doces - Ferrero Rocher'), OP('Doces - uva coberta')]),
+        GC('Recheios, toppers e massa', 1, 4, true, [OP('Recheio - Brigadeiro'), OP('Recheio: Ninho'), OP('Recheio: Coco'), OP('Recheio: Limão', 20), OP('Recheio - Casadinho'), OP('Morango', 16), OP('Geleia de morango', 10), OP('Topper com morango', 12), OP('Topper com Brigadeiro', 14), OP('Massa: chocolate'), OP('Massa: Baunilha'), OP('Massa: Limão', 10)])
+      ], sabores: [], tamanhos: [], adicionais: [],
+      observacoes: 'Dois grupos: 1 a 5 e 1 a 4 opções.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
       prontaEntrega: false, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
     },
@@ -507,8 +527,8 @@ window.SS = window.SS || {};
       descricao: 'Kit festa premium: uma seleção completa de doces para a sua festa. Consulte itens, quantidades e valores.',
       imagens: IMG_LIST(['kit-festa-premium']),
       preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'kit', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [],
-      observacoes: 'Informe data do evento e quantidade de pessoas.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
+      variacoes: [GC('Sabores', 1, 5, true, [OP('Bolo Chocolate - recheio casadinho'), OP('Bolo chocolate - Recheio Brigadeiro'), OP('Bolo Chocolate - Recheio de Ninho'), OP('Bolo Baunilha - Recheio de Ninho'), OP('Bolo Baunilha - Recheio de Brigadeiro'), OP('Doces - casadinho'), OP('Doces - Ninho'), OP('Doces - Ninho com nutella'), OP('Doces - Brigadeiro'), OP('Doces - Ferrero Rocher'), OP('Doces - uva coberta')])], sabores: [], tamanhos: [], adicionais: [],
+      observacoes: 'Escolha de 1 a 5 opções.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
       prontaEntrega: false, encomenda: true, destaque: true, ativo: true,
       conservacao: 'Itens devem ser consumidos conforme orientação no dia do evento.'
     },
