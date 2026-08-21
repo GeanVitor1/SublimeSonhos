@@ -1235,8 +1235,11 @@ input[type="date"].form-control::-webkit-datetime-edit-text { color: var(--muted
 .enc-search__ico { position: absolute; left: 14px; color: var(--muted); pointer-events: none; display: grid; place-items: center; }
 .enc-search__input { padding-left: 42px !important; background: #fffdf9; }
 .enc-search__input::-webkit-search-cancel-button { cursor: pointer; }
-.mini-cat { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
-.mini-prod { display: flex; gap: 12px; align-items: center; background: #fffdf9; border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 10px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.mini-cat { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; max-height: 520px; overflow-y: auto; overflow-x: hidden; padding-right: 6px; align-items: start; align-content: start; scrollbar-width: thin; scrollbar-color: var(--rose-300) transparent; }
+.mini-cat::-webkit-scrollbar { width: 6px; height: 6px; }
+.mini-cat::-webkit-scrollbar-thumb { background: var(--rose-300); border-radius: 999px; }
+.mini-cat::-webkit-scrollbar-track { background: transparent; }
+.mini-prod { display: flex; gap: 12px; align-items: center; align-self: start; height: auto; background: #fffdf9; border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 10px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
 .mini-prod:hover { border-color: var(--rose-300); }
 .mini-prod img { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; background: var(--cream-2); flex-shrink: 0; }
 .mini-prod__body { flex: 1; min-width: 0; }
@@ -1602,8 +1605,8 @@ section, .hero, .stats-band, .site-footer, .section--terra {
   .unico-extras-cats { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px !important; padding-bottom: 0; overflow-x: visible !important; }
   .unico-extras-cats .chip--cat { width: 100%; justify-content: center; white-space: normal; text-align: center; min-height: 44px; }
   .unico-hint { font-size: 13px; }
-  /* grid de mini produtos */
-  .mini-cat { grid-template-columns: 1fr; gap: 10px; max-height: none; padding-right: 0; }
+  /* grid de mini produtos — mantém scroll e 1 coluna no mobile pequeno */
+  .mini-cat { grid-template-columns: 1fr; gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 4px; }
   .mini-prod { padding: 8px; gap: 10px; }
   .mini-prod img, .mini-prod__fallback { width: 48px !important; height: 48px !important; }
   .mini-prod__name { font-size: 13px; }
