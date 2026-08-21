@@ -308,7 +308,7 @@ window.SS = window.SS || {};
         html =
           '<div class="panel"><h2><span class="n">3</span> Pagamento</h2><div class="panel__body">' +
             '<p class="form-hint mb-2">Escolha o momento e a forma de pagamento. Para encomendas, o pagamento antecipado pode ser solicitado pela loja.</p>' +
-            '<div class="opts">' +
+            '<div class="opts opts--2col">' +
               '<label class="opt' + (dados.momentoPagamento === 'antecipado' ? ' selected' : '') + '"><input type="radio" name="momento" value="antecipado"' + (dados.momentoPagamento === 'antecipado' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Pagamento antecipado</span></label>' +
               '<label class="opt' + (dados.momentoPagamento === 'na-entrega' ? ' selected' : '') + '"><input type="radio" name="momento" value="na-entrega"' + (dados.momentoPagamento === 'na-entrega' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Pagamento na entrega ou retirada</span></label>' +
             '</div>' +
@@ -387,7 +387,7 @@ window.SS = window.SS || {};
         html =
           '<div class="panel"><h2><span class="n">4</span> Pagamento</h2><div class="panel__body">' +
             '<p class="form-hint mb-2">Escolha o momento e a forma de pagamento. Para encomendas, o pagamento antecipado pode ser solicitado pela loja.</p>' +
-            '<div class="opts">' +
+            '<div class="opts opts--2col">' +
               '<label class="opt' + (dados.momentoPagamento === 'antecipado' ? ' selected' : '') + '"><input type="radio" name="momento" value="antecipado"' + (dados.momentoPagamento === 'antecipado' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Pagamento antecipado</span></label>' +
               '<label class="opt' + (dados.momentoPagamento === 'na-entrega' ? ' selected' : '') + '"><input type="radio" name="momento" value="na-entrega"' + (dados.momentoPagamento === 'na-entrega' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Pagamento na entrega ou retirada</span></label>' +
             '</div>' +

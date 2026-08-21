@@ -1100,7 +1100,9 @@ input[type="date"].form-control::-webkit-datetime-edit-text { color: var(--muted
 /* Options (sabores, tamanhos, adicionais) */
 .opts { display: grid; gap: 10px; }
 .opts--grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.opts--2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 520px) { .opts--grid2 { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .opts--2col { grid-template-columns: 1fr; } }
 .prod-opts[data-gid="sabor"] .opts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 520px) { .prod-opts[data-gid="sabor"] .opts { grid-template-columns: 1fr; } }
 /* Sabor * — barra de rolagem quando >4 opções (2 colunas = 2 linhas visíveis, 1 coluna = 4 linhas) */

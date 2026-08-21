@@ -218,7 +218,7 @@ window.SS = window.SS || {};
 
   function renderControles(dados) {
     return (
-      '<div class="opts" id="pg-metodos">' + renderMetodos(dados.pagamento) + '</div>' +
+      '<div class="opts opts--2col" id="pg-metodos">' + renderMetodos(dados.pagamento) + '</div>' +
       '<div id="pg-dinamico" class="mt-3"></div>' +
       '<div id="pg-troco-wrap" class="hidden mt-3"></div>'
     );

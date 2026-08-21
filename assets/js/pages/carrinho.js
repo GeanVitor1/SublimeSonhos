@@ -151,7 +151,7 @@ window.SS = window.SS || {};
       html =
         '<div class="panel"><h2><span class="n">4</span> Pagamento</h2><div class="panel__body">' +
           '<p class="form-hint mb-2">Mesmas formas de pagamento para <strong>antecipado</strong> e <strong>na entrega/retirada</strong>. Ao simular o pagamento, abrimos o WhatsApp com a mensagem formatada do seu pedido.</p>' +
-          '<div class="opts">' +
+          '<div class="opts opts--2col">' +
             '<label class="opt' + (dados.momentoPagamento === 'antecipado' ? ' selected' : '') + '"><input type="radio" name="momento" value="antecipado"' + (dados.momentoPagamento === 'antecipado' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Pagamento antecipado</span></label>' +
             '<label class="opt' + (dados.momentoPagamento === 'na-entrega' ? ' selected' : '') + '"><input type="radio" name="momento" value="na-entrega"' + (dados.momentoPagamento === 'na-entrega' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Pagamento na entrega ou retirada</span></label>' +
           '</div>' +
