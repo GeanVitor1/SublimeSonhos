@@ -44,11 +44,45 @@ window.SS = window.SS || {};
     return dados.modalidade === 'entrega' ? null : 0;
   }
 
+  function extrasEncomenda(it) {
+    if (!it.variacoes && !it.adicionais) return 0;
+    var p = SS.catalog.db.getProduto(it.id);
+    if (!p) return 0;
+    var extras = 0;
+    var vars = it.variacoes || {};
+    Object.keys(vars).forEach(function (gid) {
+      var val = vars[gid];
+      if (!val) return;
+      var arr = Array.isArray(val) ? val : [val];
+      arr.forEach(function (v) { if (v && v.acrescimo) extras += Number(v.acrescimo) || 0; });
+    });
+    (p.adicionais || []).forEach(function (a) {
+      if ((it.adicionais || []).indexOf(a.nome) !== -1 && a.preco) extras += Number(a.preco) || 0;
+    });
+    return extras;
+  }
+  function precoUnitarioEncomenda(it) {
+    var p = SS.catalog.db.getProduto(it.id);
+    if (!p || p.preco === null || p.preco === undefined) return null;
+    return p.preco + extrasEncomenda(it);
+  }
+  function descricaoOpcoesEncomenda(it) {
+    var partes = [];
+    var vars = it.variacoes || {};
+    Object.keys(vars).forEach(function (gid) {
+      var val = vars[gid];
+      if (!val) return;
+      var arr = Array.isArray(val) ? val : [val];
+      arr.forEach(function (v) { if (v && v.nome) partes.push(v.nome); });
+    });
+    if (it.adicionais && it.adicionais.length) partes = partes.concat(it.adicionais);
+    return partes.join(' · ');
+  }
   function subtotalItens() {
     var total = 0;
     itens.forEach(function (it) {
-      var p = SS.catalog.db.getProduto(it.id);
-      if (p && p.preco !== null && p.preco !== undefined) total += p.preco * it.qty;
+      var unit = precoUnitarioEncomenda(it);
+      if (unit !== null) total += unit * it.qty;
     });
     return total;
   }
@@ -96,11 +130,13 @@ window.SS = window.SS || {};
         '<div id="resumo-itens">' +
           (itens.length ? itens.map(function (it) {
             var p = obterProduto(it.id);
+            var opts = descricaoOpcoesEncomenda(it);
+            var unit = precoUnitarioEncomenda(it);
             return (
               '<div class="order-summary-item">' +
                 (p && p.imagens && p.imagens[0] ? '<img src="' + u.esc(p.imagens[0]) + '" alt="' + u.esc(p.nome) + '" loading="lazy">' : '') +
-                '<div class="order-summary-item__body"><div class="order-summary-item__name">' + it.qty + 'x ' + u.esc(p ? p.nome : it.id) + '</div>' + (it.obs ? '<div class="order-summary-item__opts">Obs.: ' + u.esc(it.obs) + '</div>' : '') + '</div>' +
-                '<div class="order-summary-item__price">' + (p && p.preco !== null && p.preco !== undefined ? u.fmtBRL(p.preco * it.qty) : 'Sob consulta') + '</div>' +
+                '<div class="order-summary-item__body"><div class="order-summary-item__name">' + it.qty + 'x ' + u.esc(p ? p.nome : it.id) + '</div>' + (opts ? '<div class="order-summary-item__opts">' + u.esc(opts) + '</div>' : '') + (it.obs ? '<div class="order-summary-item__opts">Obs.: ' + u.esc(it.obs) + '</div>' : '') + '</div>' +
+                '<div class="order-summary-item__price">' + (unit !== null ? u.fmtBRL(unit * it.qty) : 'Sob consulta') + '</div>' +
               '</div>'
             );
           }).join('') : '<p class="text-sm text-muted">Nenhum produto selecionado ainda.</p>') +
@@ -146,6 +182,10 @@ window.SS = window.SS || {};
           '<div class="opts" id="enc-cats" style="grid-auto-flow:column;overflow-x:auto;padding-bottom:6px">' +
             '<label class="opt"><input type="radio" name="enc-cat" value="todos" checked><span class="opt__dot"></span><span class="opt__label">Todos</span></label>' +
             cats.map(function (c) { return '<label class="opt"><input type="radio" name="enc-cat" value="' + u.esc(c.id) + '"><span class="opt__dot"></span><span class="opt__label"><iconify-icon icon="ph:' + (c.icone || 'cookie') + '" width="16" height="16"></iconify-icon> ' + u.esc(c.nome) + '</span></label>'; }).join('') +
+          '</div>' +
+          '<div class="enc-search-wrap mt-3">' +
+            '<span class="enc-search__ico" aria-hidden="true"><iconify-icon icon="ph:magnifying-glass" width="18" height="18"></iconify-icon></span>' +
+            '<input class="form-control enc-search__input" id="enc-busca" type="search" placeholder="Buscar produto por nome…" autocomplete="off" aria-label="Buscar produtos">' +
           '</div>' +
           '<div class="mini-cat mt-3" id="enc-mini-cat"></div>' +
           '<div class="mt-3" id="enc-itens-lista"></div>' +
@@ -197,9 +237,9 @@ window.SS = window.SS || {};
 
     var nav =
       '<div class="flex gap-3 mt-4" style="flex-wrap:wrap">' +
-        (passo > 1 ? '<button type="button" class="btn btn--outline" id="btn-voltar">← Voltar</button>' : '<a class="btn btn--outline" href="index.html#destaques">← Continuar comprando</a>') +
+        (passo > 1 ? '<button type="button" class="btn btn--outline" id="btn-voltar">← Voltar</button>' : '<button type="button" class="btn btn--outline" data-continuar>← Continuar comprando</button>') +
         (passo < TOTAIS && passo !== 4 ? '<button type="button" class="btn btn--primary btn--lg" id="btn-avancar">Continuar →</button>' : '') +
-        (passo === TOTAIS ? '<a class="btn btn--outline" href="index.html#destaques">Continuar comprando</a>' : '') +
+        (passo === TOTAIS ? '<button type="button" class="btn btn--outline" data-continuar>Continuar comprando</button>' : '') +
       '</div>';
 
     el.innerHTML = html + nav;
@@ -216,6 +256,14 @@ window.SS = window.SS || {};
     if (av) av.addEventListener('click', function () { if (validarPasso()) { passo++; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
     var vo = document.getElementById('btn-voltar');
     if (vo) vo.addEventListener('click', function () { passo--; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    el.querySelectorAll('[data-continuar]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var h = sessionStorage.getItem('ss_last_catalog_hash') || '#destaques';
+        var target = 'index.html' + h;
+        if (document.referrer && document.referrer.indexOf('index.html') !== -1 && window.history.length > 1) history.back();
+        else location.href = target;
+      });
+    });
   }
 
   /* -------------------------- ETAPA 1 ------------------------------- */
@@ -241,46 +289,304 @@ window.SS = window.SS || {};
   }
 
   /* -------------------------- ETAPA 2 ------------------------------- */
+  /* Modal encomenda — igual ao "Ver detalhes" (card.js) */
+  var encModalState = null;
+  function isCheckboxGroupEnc(g) {
+    return (g.max !== undefined && g.max !== null) || (g.min !== undefined && g.min !== null && g.min >= 0);
+  }
+  function montarGruposEnc(p) {
+    var grupos = [];
+    (p.variacoes || []).forEach(function (v) {
+      var min = v.min !== undefined && v.min !== null ? v.min : (v.obrigatoria ? 1 : 0);
+      var max = v.max !== undefined && v.max !== null ? v.max : 1;
+      grupos.push({ id: v.id || ('var_' + grupos.length), nome: v.nome, min: min, max: max, obrigatoria: !!(v.obrigatoria || min > 0), opcoes: v.opcoes });
+    });
+    if (p.sabores && p.sabores.length) grupos.push({ id: 'sabor', nome: 'Sabor', min: 1, max: 1, obrigatoria: true, opcoes: p.sabores.map(function (s) { return typeof s === 'object' ? s : { nome: s }; }) });
+    if (p.tamanhos && p.tamanhos.length) grupos.push({ id: 'tamanho', nome: 'Tamanho', min: 1, max: 1, obrigatoria: true, opcoes: p.tamanhos.map(function (s) { return typeof s === 'object' ? s : { nome: s }; }) });
+    return grupos;
+  }
+  function selArrayEnc(g, sel) {
+    var v = sel.variacoes[g.id];
+    if (!v) return [];
+    return Array.isArray(v) ? v : [v];
+  }
+  function calcExtrasEnc(p, grupos, sel) {
+    var extras = 0;
+    grupos.forEach(function (g) {
+      selArrayEnc(g, sel).forEach(function (it) { if (it.acrescimo) extras += Number(it.acrescimo) || 0; });
+    });
+    (p.adicionais || []).forEach(function (a) {
+      if (sel.adicionais.indexOf(a.nome) !== -1 && a.preco) extras += Number(a.preco) || 0;
+    });
+    return extras;
+  }
+  function fecharModalEncomenda() {
+    if (!encModalState) return;
+    encModalState.overlay.classList.remove('open');
+    document.removeEventListener('keydown', encModalState.onKey);
+    document.body.style.overflow = '';
+    var ov = encModalState.overlay;
+    setTimeout(function () { if (encModalState && encModalState.overlay === ov) { ov.remove(); encModalState = null; } }, 250);
+  }
+  function abrirModalEncomenda(p) {
+    if (!p) return;
+    fecharModalEncomenda();
+    var ICON_X = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    var grupos = montarGruposEnc(p);
+    var hasOpcoes = grupos.length > 0 || (p.adicionais && p.adicionais.length);
+    var esgotado = !!p.esgotado;
+    var semPreco = p.preco === null || p.preco === undefined;
+    var FALLBACK_ATTR = u.imgFallbackAttr ? u.imgFallbackAttr() : '';
+    function seloHtml(prod) {
+      if (prod.esgotado) return '<span class="badge badge--ink">Esgotado</span>';
+      var selos = [];
+      if (prod.prontaEntrega) selos.push('<span class="badge badge--green">Pronta entrega</span>');
+      if (prod.encomenda && !prod.prontaEntrega) selos.push('<span class="badge badge--rose">Sob encomenda</span>');
+      return selos.join('');
+    }
+    var sel = { variacoes: {}, adicionais: [], qty: Math.max(1, p.quantidadeMinima || 1), observacao: '' };
+    grupos.forEach(function (g) { if (isCheckboxGroupEnc(g) && !(g.min === 1 && g.max === 1)) sel.variacoes[g.id] = []; });
+    var img = (p.imagens && p.imagens[0]) || '';
+    var podeAdicionar = !esgotado;
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay--prod';
+    overlay.innerHTML =
+      '<div class="modal' + (img ? '' : ' modal--sem-media') + '" role="dialog" aria-modal="true" aria-label="' + u.esc(p.nome) + '">' +
+        '<button type="button" class="modal__close" data-close aria-label="Fechar">' + ICON_X + '</button>' +
+        (img ? '<div class="modal__media"><img src="' + u.esc(img) + '" alt="' + u.esc(p.nome) + '"' + FALLBACK_ATTR + '></div>' : '') +
+        '<div class="modal__right">' +
+          '<div class="modal__scroll">' +
+            '<div class="modal__body">' +
+              '<div class="modal__badges">' + seloHtml(p) + '</div>' +
+              '<span class="product-card__cat">' + u.esc(SS.catalog.db.getCategoriaNome(p.categoria) || 'Nossos doces') + '</span>' +
+              '<h3 class="modal__title">' + u.esc(p.nome) + '</h3>' +
+              (p.descricao ? '<p class="modal__desc">' + u.esc(p.descricao) + '</p>' : '') +
+              '<div class="modal__price" id="enc-pm-preco"></div>' +
+              (podeAdicionar && hasOpcoes ? '<div id="enc-pm-opcoes"></div>' : (esgotado ? '' : (!hasOpcoes && !semPreco ? '' : '<p class="text-sm text-muted" style="margin-top:10px">Informe quantidade e, se quiser, uma observação. Valor sob consulta será confirmado pela loja.</p>'))) +
+              (podeAdicionar ? '<div class="prod-opts" style="margin-top:16px"><h4>Quantidade <span style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0;font-size:12.5px">(mínimo ' + (p.quantidadeMinima || 1) + ')</span></h4><div class="qty" style="height:48px"><button type="button" data-qtd="-1" aria-label="Diminuir quantidade">−</button><input type="text" inputmode="numeric" id="enc-pm-qty" value="' + sel.qty + '" aria-label="Quantidade"><button type="button" data-qtd="1" aria-label="Aumentar quantidade">+</button></div></div>' : '') +
+              (podeAdicionar ? '<div class="form-group" style="margin-top:16px"><label class="form-label form-label--row" for="enc-pm-obs">Alguma observação? <span class="form-count" id="enc-pm-count">0 / 140</span></label><textarea class="form-control" id="enc-pm-obs" rows="3" maxlength="140" placeholder="' + u.esc(p.observacoes || 'Ex.: caprichar na decoração ou escrever uma mensagem especial...') + '"></textarea></div>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="modal__foot">' +
+            (esgotado ? '<button type="button" class="btn btn--outline btn--lg" disabled>Produto esgotado</button>' : '<button type="button" class="btn btn--primary btn--lg" id="enc-pm-add">Adicionar à encomenda</button>') +
+            '<button type="button" class="btn btn--outline btn--lg" data-close2>Cancelar</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+    function fechar() { fecharModalEncomenda(); }
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) fechar(); });
+    overlay.querySelector('[data-close]').addEventListener('click', fechar);
+    var c2 = overlay.querySelector('[data-close2]');
+    if (c2) c2.addEventListener('click', fechar);
+    var onKey = function (e) { if (e.key === 'Escape') fechar(); };
+    document.addEventListener('keydown', onKey);
+    function renderPreco() {
+      var el = overlay.querySelector('#enc-pm-preco');
+      if (!el) return;
+      var extras = calcExtrasEnc(p, grupos, sel);
+      var base = p.preco === null || p.preco === undefined ? 0 : p.preco;
+      var total = Math.round((base + extras) * 100) / 100;
+      var temPromo = p.precoPromo && p.precoPromo < p.preco;
+      var temAcrescimo = (p.variacoes || []).some(function (v) { return v.opcoes.some(function (o) { return o.acrescimo; }); });
+      var todosOk = grupos.every(function (g) { var n = selArrayEnc(g, sel).length; return n >= (g.min || 0) && (g.max ? n <= g.max : true) && (!g.obrigatoria || n > 0); });
+      var inicio = temAcrescimo && !todosOk;
+      if (p.preco === null || p.preco === undefined) {
+        var addTxt = extras > 0 ? ' + adicionais ' + u.fmtBRL(extras) : '';
+        el.innerHTML = '<span class="p-now">Valor sob consulta' + (addTxt ? ' <span style="font-size:14px;color:var(--muted)">(' + addTxt.trim() + ')</span>' : '') + '</span>';
+        return;
+      }
+      el.innerHTML =
+        (inicio ? '<span class="p-start">A partir de</span>' : '') +
+        '<span class="p-now">' + u.fmtBRL(temPromo ? p.precoPromo + extras : total) + '</span>' +
+        (temPromo ? '<span class="p-old">' + u.fmtBRL(total) + '</span>' : '') +
+        (extras > 0 ? '<span class="p-add">inclui ' + u.fmtBRL(extras) + ' em adicionais</span>' : '');
+    }
+    function renderOpcoes() {
+      var dest = overlay.querySelector('#enc-pm-opcoes');
+      if (!dest) return;
+      var html = '';
+      grupos.forEach(function (g) {
+        var isCb = isCheckboxGroupEnc(g) && !(g.min === 1 && g.max === 1);
+        var rangeTxt = g.min === g.max ? (g.min === 1 ? 'Escolha 1 opção' : 'Escolha ' + g.min + ' opções') : (g.min === 0 ? 'Escolha até ' + g.max + ' opção' + (g.max > 1 ? 'ões' : '') : 'Escolha de ' + g.min + ' a ' + g.max + ' opções');
+        html +=
+          '<div class="prod-opts" data-gid="' + u.esc(g.id) + '">' +
+            '<div class="prod-opts__head">' +
+              '<h4>' + u.esc(g.nome) + (g.obrigatoria ? ' <span style="color:var(--danger)">*</span>' : '') + '</h4>' +
+              '<span class="prod-opts__meta"><span class="prod-opts__count" data-count="' + u.esc(g.id) + '">0 / ' + g.max + '</span> · ' + u.esc(rangeTxt) + (g.obrigatoria ? ' · <span style="color:var(--danger);font-weight:700">OBRIGATÓRIO</span>' : '') + '</span>' +
+            '</div>';
+        if (isCb) {
+          html += '<div class="opts" role="group" aria-label="' + u.esc(g.nome) + '">' +
+            g.opcoes.map(function (o) {
+              var acrescimo = Number(o.acrescimo) > 0 ? ' <span class="opt__price">+' + u.fmtBRL(o.acrescimo) + '</span>' : '';
+              return '<label class="opt opt--checkbox" data-grupo="' + u.esc(g.id) + '"><input type="checkbox" value="' + u.esc(o.nome) + '" data-acrescimo="' + (Number(o.acrescimo) || 0) + '"><span class="opt__dot" aria-hidden="true"></span><span class="opt__label">' + u.esc(o.nome) + acrescimo + '</span></label>';
+            }).join('') + '</div>';
+        } else {
+          html += '<div class="opts" role="radiogroup" aria-label="' + u.esc(g.nome) + '">' +
+            g.opcoes.map(function (o) {
+              var acrescimo = Number(o.acrescimo) > 0 ? ' <span class="opt__price">+' + u.fmtBRL(o.acrescimo) + '</span>' : '';
+              return '<label class="opt" data-grupo="' + u.esc(g.id) + '"><input type="radio" name="enc-pm-' + u.esc(g.id) + '" value="' + u.esc(o.nome) + '" data-acrescimo="' + (Number(o.acrescimo) || 0) + '"><span class="opt__dot" aria-hidden="true"></span><span class="opt__label">' + u.esc(o.nome) + acrescimo + '</span></label>';
+            }).join('') + '</div>';
+        }
+        html += '</div>';
+      });
+      if (p.adicionais && p.adicionais.length) {
+        html +=
+          '<div class="prod-opts">' +
+            '<div class="prod-opts__head"><h4>Adicionais</h4></div>' +
+            '<div class="opts" role="group" aria-label="Adicionais">' +
+              p.adicionais.map(function (a) {
+                return '<label class="opt opt--checkbox" data-grupo="adicionais"><input type="checkbox" value="' + u.esc(a.nome) + '" data-preco="' + (Number(a.preco) || 0) + '"><span class="opt__dot" aria-hidden="true"></span><span class="opt__label">' + u.esc(a.nome) + (Number(a.preco) > 0 ? ' <span class="opt__price">+' + u.fmtBRL(a.preco) + '</span>' : '') + '</span></label>';
+              }).join('') + '</div></div>';
+      }
+      dest.innerHTML = html;
+      function syncCount(g) {
+        var c = dest.querySelector('[data-count="' + g.id + '"]');
+        if (c) c.textContent = selArrayEnc(g, sel).length + ' / ' + g.max;
+        var wrap2 = dest.querySelector('.prod-opts[data-gid="' + g.id + '"]');
+        if (!wrap2) return;
+        var n = selArrayEnc(g, sel).length;
+        var atLimit = n >= g.max;
+        wrap2.querySelectorAll('.opt input[type="checkbox"]').forEach(function (inp) {
+          if (!inp.checked) { inp.disabled = atLimit; inp.closest('.opt').classList.toggle('is-disabled', atLimit); }
+        });
+      }
+      grupos.forEach(function (g) {
+        var isCb = isCheckboxGroupEnc(g) && !(g.min === 1 && g.max === 1);
+        if (!isCb) return;
+        var inputs = dest.querySelectorAll('.opt[data-grupo="' + g.id + '"] input[type="checkbox"]');
+        inputs.forEach(function (inp) {
+          inp.addEventListener('change', function () {
+            var arr = sel.variacoes[g.id] || [];
+            if (!Array.isArray(arr)) arr = arr ? [arr] : [];
+            if (inp.checked) {
+              if (arr.length >= g.max) { inp.checked = false; SS.ui.toast('Máximo de ' + g.max + ' opção' + (g.max > 1 ? 'ões' : '') + ' em ' + g.nome, 'error'); return; }
+              arr.push({ nome: inp.value, acrescimo: Number(inp.getAttribute('data-acrescimo')) || 0 });
+            } else {
+              arr = arr.filter(function (x) { return x.nome !== inp.value; });
+            }
+            sel.variacoes[g.id] = arr;
+            inp.closest('.opt').classList.toggle('selected', inp.checked);
+            syncCount(g);
+            renderPreco();
+          });
+        });
+        syncCount(g);
+      });
+      dest.querySelectorAll('.opt input[type="radio"]').forEach(function (inp) {
+        inp.addEventListener('change', function () {
+          var lbl = inp.closest('.opt');
+          var g = lbl.getAttribute('data-grupo');
+          lbl.parentElement.querySelectorAll('.opt').forEach(function (o) { o.classList.remove('selected'); });
+          lbl.classList.add('selected');
+          sel.variacoes[g] = { nome: inp.value, acrescimo: Number(inp.getAttribute('data-acrescimo')) || 0 };
+          renderPreco();
+        });
+      });
+      dest.querySelectorAll('.opt[data-grupo="adicionais"] input[type="checkbox"]').forEach(function (inp) {
+        inp.addEventListener('change', function () {
+          inp.closest('.opt').classList.toggle('selected', inp.checked);
+          if (inp.checked) sel.adicionais.push(inp.value);
+          else sel.adicionais = sel.adicionais.filter(function (n) { return n !== inp.value; });
+          renderPreco();
+        });
+      });
+    }
+    if (podeAdicionar && hasOpcoes) renderOpcoes();
+    renderPreco();
+    var obsEl = overlay.querySelector('#enc-pm-obs');
+    if (obsEl) obsEl.addEventListener('input', function () { overlay.querySelector('#enc-pm-count').textContent = this.value.length + ' / 140'; });
+    var qtyEl = overlay.querySelector('#enc-pm-qty');
+    if (qtyEl) {
+      overlay.querySelectorAll('[data-qtd]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var min = p.quantidadeMinima || 1;
+          var q = Number(qtyEl.value) || min;
+          q += Number(b.getAttribute('data-qtd'));
+          qtyEl.value = Math.max(min, q);
+        });
+      });
+      qtyEl.addEventListener('change', function () { var min = p.quantidadeMinima || 1; this.value = Math.max(min, Number(this.value) || min); });
+    }
+    var addBtn = overlay.querySelector('#enc-pm-add');
+    if (addBtn) addBtn.addEventListener('click', function () {
+      var faltando = grupos.filter(function (g) {
+        var n = selArrayEnc(g, sel).length;
+        if (g.obrigatoria && n < g.min) return true;
+        if (n > g.max) return true;
+        return false;
+      });
+      if (faltando.length) {
+        SS.ui.toast('Selecione: ' + faltando.map(function (g) { return g.nome + ' (' + g.min + '-' + g.max + ')'; }).join(', '), 'error');
+        return;
+      }
+      sel.qty = Math.max(p.quantidadeMinima || 1, Number(overlay.querySelector('#enc-pm-qty').value) || 1);
+      sel.observacao = overlay.querySelector('#enc-pm-obs') ? overlay.querySelector('#enc-pm-obs').value.trim() : '';
+      adicionarItem(p.id, sel.qty, sel.observacao, sel.variacoes, sel.adicionais);
+      SS.ui.toast(p.nome + ' adicionado à encomenda!');
+      fechar();
+    });
+    requestAnimationFrame(function () {
+      overlay.classList.add('open');
+      var c = overlay.querySelector('[data-close]');
+      if (c) c.focus();
+    });
+    encModalState = { overlay: overlay, onKey: onKey };
+  }
+
   function initPassoProdutos() {
     var catSel = 'todos';
+    var buscaTermo = '';
+    function getFiltrados() {
+      var todos = SS.catalog.db.getProdutos();
+      return todos.filter(function (p) {
+        var okCat = catSel === 'todos' || p.categoria === catSel;
+        if (!okCat) return false;
+        if (!buscaTermo) return true;
+        var t = buscaTermo.toLowerCase();
+        return (p.nome && p.nome.toLowerCase().indexOf(t) !== -1) || (p.descricaoCurta && p.descricaoCurta.toLowerCase().indexOf(t) !== -1) || (p.descricao && p.descricao.toLowerCase().indexOf(t) !== -1);
+      });
+    }
     function renderMini() {
       var grid = document.getElementById('enc-mini-cat');
-      var produtos = SS.catalog.db.getProdutos().filter(function (p) { return catSel === 'todos' || p.categoria === catSel; });
+      if (!grid) return;
+      var produtos = getFiltrados();
+      if (!produtos.length) {
+        grid.innerHTML = '<p class="text-muted text-sm" style="grid-column:1/-1;text-align:center;padding:18px">' + (buscaTermo ? 'Nenhum produto encontrado para "' + u.esc(buscaTermo) + '".' : 'Nenhum produto nesta categoria.') + '</p>';
+        return;
+      }
       grid.innerHTML = produtos.map(function (p) {
         var ja = itens.filter(function (i) { return i.id === p.id; })[0];
+        var precoTxt = (p.preco === null || p.preco === undefined ? 'Sob consulta' : u.fmtBRL(p.preco));
         return (
           '<div class="mini-prod" data-prod="' + u.esc(p.id) + '">' +
-            (p.imagens && p.imagens[0] ? '<img src="' + u.esc(p.imagens[0]) + '" alt="' + u.esc(p.nome) + '" loading="lazy">' : '') +
+            (p.imagens && p.imagens[0] ? '<img src="' + u.esc(p.imagens[0]) + '" alt="' + u.esc(p.nome) + '" loading="lazy">' : '<span class="mini-prod__fallback" aria-hidden="true"><iconify-icon icon="ph:cake" width="22" height="22"></iconify-icon></span>') +
             '<div class="mini-prod__body">' +
               '<div class="mini-prod__name">' + u.esc(p.nome) + '</div>' +
-              '<div class="mini-prod__price">' + (p.preco === null || p.preco === undefined ? 'Sob consulta' : u.fmtBRL(p.preco)) + '</div>' +
+              '<div class="mini-prod__price">' + precoTxt + '</div>' +
               (ja ? '<div class="text-sm" style="color:var(--success);font-weight:700">' + ja.qty + 'x na lista</div>' : '') +
             '</div>' +
             '<button type="button" class="mini-prod__add" aria-label="Adicionar ' + u.esc(p.nome) + '">+</button>' +
           '</div>'
         );
-      }).join('') || '<p class="text-muted text-sm">Nenhum produto nesta categoria.</p>';
+      }).join('');
       grid.querySelectorAll('[data-prod]').forEach(function (card) {
         card.addEventListener('click', function (e) {
           if (e.target.closest('button')) return;
           var id = card.getAttribute('data-prod');
           var p = obterProduto(id);
           if (!p) return;
-          var qtyStr = prompt('Quantidade de "' + p.nome + '":', String(itens.filter(function (i) { return i.id === id; })[0] ? itens.filter(function (i) { return i.id === id; })[0].qty : 1));
-          if (qtyStr === null) return;
-          var q = Math.max(1, Number(qtyStr) || 1);
-          adicionarItem(id, q, '');
+          abrirModalEncomenda(p);
         });
       });
       grid.querySelectorAll('.mini-prod__add').forEach(function (b) {
-        b.addEventListener('click', function () {
+        b.addEventListener('click', function (e) {
+          e.stopPropagation();
           var id = b.closest('.mini-prod').getAttribute('data-prod');
           var p = obterProduto(id);
           if (!p) return;
-          var qtyStr = prompt('Quantidade de "' + p.nome + '":', String(itens.filter(function (i) { return i.id === id; })[0] ? itens.filter(function (i) { return i.id === id; })[0].qty : 1));
-          if (qtyStr === null) return;
-          var q = Math.max(1, Number(qtyStr) || 1);
-          adicionarItem(id, q, '');
+          abrirModalEncomenda(p);
         });
       });
     }
@@ -292,16 +598,63 @@ window.SS = window.SS || {};
         renderMini();
       });
     });
+    var buscEl = document.getElementById('enc-busca');
+    if (buscEl) {
+      buscEl.addEventListener('input', function () {
+        buscaTermo = buscEl.value.trim();
+        renderMini();
+      });
+    }
     renderMini();
     renderListaItens();
   }
 
-  function adicionarItem(id, qty, obs) {
-    var existente = itens.filter(function (i) { return i.id === id; })[0];
+  function adicionarItem(id, qty, obs, variacoes, adicionais) {
+    var payloadVariacoes = variacoes || {};
+    var payloadAdicionais = adicionais || [];
+    var existente = itens.filter(function (i) {
+      return i.id === id && JSON.stringify(i.variacoes || {}) === JSON.stringify(payloadVariacoes) && JSON.stringify(i.adicionais || []) === JSON.stringify(payloadAdicionais) && (i.obs || '') === (obs || '');
+    })[0];
     if (existente) existente.qty += qty;
-    else itens.push({ id: id, qty: qty, obs: obs || '' });
+    else itens.push({ id: id, qty: qty, obs: obs || '', variacoes: payloadVariacoes, adicionais: payloadAdicionais });
     renderListaItens();
     renderResumo();
+    var grid = document.getElementById('enc-mini-cat');
+    if (grid) {
+      var catSelEl = document.querySelector('input[name="enc-cat"]:checked');
+      var catSel = catSelEl ? catSelEl.value : 'todos';
+      var buscaEl = document.getElementById('enc-busca');
+      var termo = buscaEl ? buscaEl.value.trim().toLowerCase() : '';
+      var produtos = SS.catalog.db.getProdutos().filter(function (p) {
+        var okCat = catSel === 'todos' || p.categoria === catSel;
+        if (!okCat) return false;
+        if (!termo) return true;
+        return (p.nome && p.nome.toLowerCase().indexOf(termo) !== -1);
+      });
+      var has = produtos.length;
+      if (has) {
+        var mini = document.getElementById('enc-mini-cat');
+        if (mini) {
+          mini.querySelectorAll('[data-prod]').forEach(function (card) {
+            var pid = card.getAttribute('data-prod');
+            var ja = itens.filter(function (i) { return i.id === pid; })[0];
+            var priceEl = card.querySelector('.mini-prod__body');
+            if (priceEl && ja) {
+              var existingBadge = card.querySelector('.mini-prod__body .text-sm');
+              if (!existingBadge) {
+                var d = document.createElement('div');
+                d.className = 'text-sm';
+                d.style.cssText = 'color:var(--success);font-weight:700';
+                d.textContent = ja.qty + 'x na lista';
+                priceEl.appendChild(d);
+              } else {
+                existingBadge.textContent = ja.qty + 'x na lista';
+              }
+            }
+          });
+        }
+      }
+    }
   }
 
   function renderListaItens() {
@@ -313,31 +666,35 @@ window.SS = window.SS || {};
     }
     el.innerHTML =
       '<h4 class="mb-2" style="font-size:15px;color:var(--rose-700)">Itens da encomenda</h4>' +
-      itens.map(function (it) {
+      itens.map(function (it, idx) {
         var p = obterProduto(it.id);
+        var optsTxt = descricaoOpcoesEncomenda(it);
+        var unit = precoUnitarioEncomenda(it);
         return (
           '<div class="order-summary-item" style="align-items:center">' +
             (p && p.imagens && p.imagens[0] ? '<img src="' + u.esc(p.imagens[0]) + '" alt="' + u.esc(p.nome) + '" loading="lazy">' : '') +
             '<div class="order-summary-item__body">' +
               '<div class="order-summary-item__name">' + u.esc(p ? p.nome : it.id) + '</div>' +
-              (p && (p.sabores && p.sabores.length || p.tamanhos && p.tamanhos.length) ? '<div class="order-summary-item__opts">Consulte sabores/tamanhos com a loja</div>' : '') +
+              (optsTxt ? '<div class="order-summary-item__opts">' + u.esc(optsTxt) + '</div>' : (p && (p.sabores && p.sabores.length || p.tamanhos && p.tamanhos.length) ? '<div class="order-summary-item__opts">Consulte sabores/tamanhos com a loja</div>' : '')) +
+              (it.obs ? '<div class="order-summary-item__opts">Obs.: ' + u.esc(it.obs) + '</div>' : '') +
               '<div class="flex gap-3 items-center mt-2">' +
                 '<div class="qty">' +
-                  '<button type="button" data-encqtd="-1" data-id="' + u.esc(it.id) + '" aria-label="Diminuir">−</button>' +
-                  '<input type="text" inputmode="numeric" value="' + it.qty + '" data-encinput="' + u.esc(it.id) + '" aria-label="Quantidade">' +
-                  '<button type="button" data-encqtd="1" data-id="' + u.esc(it.id) + '" aria-label="Aumentar">+</button>' +
+                  '<button type="button" data-encqtd="-1" data-idx="' + idx + '" aria-label="Diminuir">−</button>' +
+                  '<input type="text" inputmode="numeric" value="' + it.qty + '" data-encinput="' + idx + '" aria-label="Quantidade">' +
+                  '<button type="button" data-encqtd="1" data-idx="' + idx + '" aria-label="Aumentar">+</button>' +
                 '</div>' +
-                '<button type="button" class="cart-item__remove" data-encdel="' + u.esc(it.id) + '">Remover</button>' +
+                '<button type="button" class="cart-item__remove" data-encdel="' + idx + '">Remover</button>' +
               '</div>' +
             '</div>' +
-            '<div class="order-summary-item__price">' + (p && p.preco !== null && p.preco !== undefined ? u.fmtBRL(p.preco * it.qty) : 'Sob consulta') + '</div>' +
+            '<div class="order-summary-item__price">' + (unit !== null ? u.fmtBRL(unit * it.qty) : 'Sob consulta') + '</div>' +
           '</div>'
         );
       }).join('');
 
     el.querySelectorAll('[data-encqtd]').forEach(function (b) {
       b.addEventListener('click', function () {
-        var it = itens.filter(function (i) { return i.id === b.getAttribute('data-id'); })[0];
+        var idx = Number(b.getAttribute('data-idx'));
+        var it = itens[idx];
         if (!it) return;
         it.qty = Math.max(1, it.qty + Number(b.getAttribute('data-encqtd')));
         renderListaItens(); renderResumo();
@@ -345,7 +702,8 @@ window.SS = window.SS || {};
     });
     el.querySelectorAll('[data-encinput]').forEach(function (inp) {
       inp.addEventListener('change', function () {
-        var it = itens.filter(function (i) { return i.id === inp.getAttribute('data-encinput'); })[0];
+        var idx = Number(inp.getAttribute('data-encinput'));
+        var it = itens[idx];
         if (!it) return;
         it.qty = Math.max(1, Number(inp.value) || 1);
         renderListaItens(); renderResumo();
@@ -353,7 +711,8 @@ window.SS = window.SS || {};
     });
     el.querySelectorAll('[data-encdel]').forEach(function (b) {
       b.addEventListener('click', function () {
-        itens = itens.filter(function (i) { return i.id !== b.getAttribute('data-encdel'); });
+        var idx = Number(b.getAttribute('data-encdel'));
+        itens.splice(idx, 1);
         renderListaItens(); renderResumo();
         var mini = document.getElementById('enc-mini-cat');
         if (mini) initPassoProdutos();
@@ -422,7 +781,9 @@ window.SS = window.SS || {};
       '<div class="review-block"><h3>Itens</h3><ul>' +
         itens.map(function (it) {
           var p = obterProduto(it.id);
-          return '<li>' + it.qty + 'x ' + u.esc(p ? p.nome : it.id) + (it.obs ? ' — Obs.: ' + u.esc(it.obs) : '') + ' — ' + (p && p.preco !== null && p.preco !== undefined ? u.fmtBRL(p.preco * it.qty) : 'sob consulta') + '</li>';
+          var optsTxt = descricaoOpcoesEncomenda(it);
+          var unit = precoUnitarioEncomenda(it);
+          return '<li>' + it.qty + 'x ' + u.esc(p ? p.nome : it.id) + (optsTxt ? ' (' + u.esc(optsTxt) + ')' : '') + (it.obs ? ' — Obs.: ' + u.esc(it.obs) : '') + ' — ' + (unit !== null ? u.fmtBRL(unit * it.qty) : 'sob consulta') + '</li>';
         }).join('') +
       '</ul></div>' +
       '<div class="review-block"><h3>Entrega</h3><ul>' +
@@ -503,13 +864,14 @@ window.SS = window.SS || {};
       telefone: dados.telefone || '',
       itens: itens.map(function (it) {
         var p = obterProduto(it.id);
+        var unit = precoUnitarioEncomenda(it);
         return {
           nome: p ? p.nome : it.id,
           qty: it.qty,
-          observacao: it.obs,
-          unitPrice: p ? p.preco : null,
-          variacoes: {},
-          adicionais: [],
+          observacao: it.obs + (descricaoOpcoesEncomenda(it) ? ' | Opções: ' + descricaoOpcoesEncomenda(it) : ''),
+          unitPrice: unit,
+          variacoes: it.variacoes || {},
+          adicionais: it.adicionais || [],
         };
       }),
       encomenda: { data: dados.data, hora: dados.hora, evento: dados.evento, pessoas: dados.pessoas },

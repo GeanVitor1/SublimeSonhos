@@ -40,13 +40,15 @@ window.SS = window.SS || {};
     var itens = SS.cart.getItens();
 
     if (!itens.length) {
+      var ultimaCat = sessionStorage.getItem('ss_last_catalog_hash') || '#destaques';
+      var hrefCat = 'index.html' + (ultimaCat.charAt(0) === '#' ? ultimaCat : '#' + ultimaCat);
       el.innerHTML =
         '<div class="empty-state">' +
           '<div class="empty-state__ico" aria-hidden="true"><iconify-icon icon="ph:bag-simple" width="48" height="48"></iconify-icon></div>' +
           '<h2>Seu carrinho está vazio</h2>' +
           '<p>Adicione produtos ao carrinho para montar seu pedido.</p>' +
           '<div class="flex gap-3 items-center justify-center mt-4" style="flex-wrap:wrap">' +
-            '<a class="btn btn--primary btn--lg" href="index.html#destaques">Ver produtos</a>' +
+            '<a class="btn btn--primary btn--lg" href="' + hrefCat + '">Ver produtos</a>' +
             '<a class="btn btn--outline btn--lg" href="encomenda.html">Fazer encomenda</a>' +
           '</div>' +
         '</div>';
@@ -171,9 +173,9 @@ window.SS = window.SS || {};
 
     var navBtns =
       '<div class="flex gap-3 mt-4" style="flex-wrap:wrap">' +
-        (passo > 1 ? '<button type="button" class="btn btn--outline" id="btn-voltar">← Voltar</button>' : '<a class="btn btn--outline" href="index.html#destaques">← Continuar comprando</a>') +
+        (passo > 1 ? '<button type="button" class="btn btn--outline" id="btn-voltar">← Voltar</button>' : '<button type="button" class="btn btn--outline" data-continuar>← Continuar comprando</button>') +
         (passo < TOTAIS && passo !== 4 ? '<button type="button" class="btn btn--primary btn--lg" id="btn-avancar">Continuar →</button>' : '') +
-        (passo === TOTAIS ? '<a class="btn btn--outline" href="index.html#destaques">Continuar comprando</a>' : '') +
+        (passo === TOTAIS ? '<button type="button" class="btn btn--outline" data-continuar>Continuar comprando</button>' : '') +
       '</div>';
 
     el.innerHTML = html + navBtns;
@@ -193,6 +195,18 @@ window.SS = window.SS || {};
     });
     var vo = document.getElementById('btn-voltar');
     if (vo) vo.addEventListener('click', function () { passo--; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    el.querySelectorAll('[data-continuar]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var h = sessionStorage.getItem('ss_last_catalog_hash') || '#destaques';
+        var target = 'index.html' + h;
+        // se veio do catálogo, volta exatamente de onde saiu sem recarregar topo
+        if (document.referrer && document.referrer.indexOf('index.html') !== -1 && window.history.length > 1) {
+          history.back();
+        } else {
+          location.href = target;
+        }
+      });
+    });
   }
 
   /* ------------------------- ETAPA 1: ITENS ------------------------- */

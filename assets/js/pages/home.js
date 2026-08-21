@@ -91,6 +91,11 @@ window.SS = window.SS || {};
         '</a>'
       );
     }).join('');
+    bar.querySelectorAll('.chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        try { sessionStorage.setItem('ss_last_catalog_hash', chip.getAttribute('href')); } catch (e) {}
+      });
+    });
   }
 
   /* Seções na ordem do catálogo; cada uma mostra todos os produtos reais
@@ -151,7 +156,9 @@ window.SS = window.SS || {};
         if (!en.isIntersecting) return;
         var id = en.target.id;
         chips.forEach(function (c) {
-          c.classList.toggle('active', c.getAttribute('href') === '#' + id);
+          var isActive = c.getAttribute('href') === '#' + id;
+          c.classList.toggle('active', isActive);
+          if (isActive) { try { sessionStorage.setItem('ss_last_catalog_hash', '#' + id); } catch (e) {} }
         });
       });
     }, { rootMargin: '-15% 0px -70% 0px' });
@@ -286,5 +293,9 @@ window.SS = window.SS || {};
     initContato();
     initHeroRotacao();
     initSplitGaleria();
+    try {
+      if (location.hash) sessionStorage.setItem('ss_last_catalog_hash', location.hash);
+      else if (!sessionStorage.getItem('ss_last_catalog_hash')) sessionStorage.setItem('ss_last_catalog_hash', '#destaques');
+    } catch (e) {}
   });
 })(window.SS);

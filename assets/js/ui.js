@@ -216,7 +216,8 @@ window.SS = window.SS || {};
       '<div class="df-row"><span>Entrega</span><strong>' + entregaLabel + '</strong></div>' +
       '<div class="df-row df-row--total"><span>Total estimado</span><span>' + totalLabel + '</span></div>' +
       '<a class="btn btn--primary btn--block" href="carrinho.html">Finalizar pedido</a>' +
-      '<a class="btn btn--outline btn--block" href="index.html#destaques">Continuar comprando</a>';
+      '<button type="button" class="btn btn--outline btn--block" data-close-cart>Continuar comprando</button>';
+    foot.querySelector('[data-close-cart]').addEventListener('click', function () { SS.ui.toggleCart(false); });
 
     body.querySelectorAll('[data-remove]').forEach(function (b) {
       b.addEventListener('click', function () {
