@@ -1118,7 +1118,9 @@ window.SS = window.SS || {};
           var id = b.closest('.mini-prod').getAttribute('data-prod');
           var p = obterProduto(id);
           if (!p) return;
-          abrirModalEncomenda(p);
+          var qtd = Math.max(1, p.quantidadeMinima || 1);
+          adicionarItem(p.id, qtd, '', {}, []);
+          SS.ui.toast(p.nome + ' adicionado à encomenda!');
         });
       });
     }
