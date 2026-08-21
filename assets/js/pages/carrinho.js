@@ -62,14 +62,15 @@ window.SS = window.SS || {};
       passos.push('<div class="steps-bar__item' + (i < passo ? ' done' : i === passo ? ' active' : '') + '"></div>');
     }
 
+    var mostraResumo = (passo === 4);
     el.innerHTML =
       '<div class="steps-bar" aria-hidden="true">' + passos.join('') + '</div>' +
-      '<div class="checkout-grid">' +
+      '<div class="checkout-grid' + (mostraResumo ? '' : ' checkout-grid--sem-resumo') + '">' +
         '<div id="painel-esquerda"></div>' +
-        '<aside class="panel" id="painel-resumo"></aside>' +
+        (mostraResumo ? '<aside class="panel" id="painel-resumo"></aside>' : '') +
       '</div>';
 
-    renderResumo(itens, sobConsulta);
+    if (mostraResumo) renderResumo(itens, sobConsulta);
     renderPasso(sobConsulta);
   }
 
@@ -78,6 +79,7 @@ window.SS = window.SS || {};
   /* ------------------------------------------------------------------ */
   function renderResumo(itens, sobConsulta) {
     var el = document.getElementById('painel-resumo');
+    if (!el) return;
     var sub = SS.cart.subtotal();
     var ent = valorEntrega();
     var total = totalEstimado();
