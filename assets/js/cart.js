@@ -31,20 +31,12 @@ window.SS = window.SS || {};
   function on(fn) { listeners.push(fn); }
 
   /* Calcula o preço unitário de um produto com base na seleção feita.
-     Retorna null quando o produto não tem preço definido (sob consulta). */
+     Retorna null quando o produto não tem preço definido (sob consulta) —
+     encomendas com valor sob consulta não podem ser finalizadas como
+     pedido rápido (carrinho); devem usar encomenda.html. */
   function calcularPrecoUnitario(produto, selecao) {
-    if (produto.preco === null || produto.preco === undefined) {
-      var extras0 = 0;
-      Object.keys(selecao.variacoes || {}).forEach(function (k) {
-        var v = selecao.variacoes[k];
-        var arr = Array.isArray(v) ? v : (v && v.nome ? [v] : []);
-        arr.forEach(function (it) { if (it.acrescimo) extras0 += Number(it.acrescimo) || 0; });
-      });
-      (selecao.adicionais || []).forEach(function (nome) {
-        var extra = (produto.adicionais || []).filter(function (a) { return a.nome === nome; })[0];
-        if (extra && extra.preco) extras0 += Number(extra.preco) || 0;
-      });
-      return extras0 > 0 ? extras0 : null;
+    if (produto.preco === null || produto.preco === undefined || produto.precoSobConsulta) {
+      return null;
     }
     var preco = produto.preco;
     Object.keys(selecao.variacoes || {}).forEach(function (k) {

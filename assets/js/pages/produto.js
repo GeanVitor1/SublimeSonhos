@@ -66,7 +66,7 @@ window.SS = window.SS || {};
       var max = v.max !== undefined && v.max !== null ? v.max : 1;
       grupos.push({ id: v.id || ('var_' + grupos.length), nome: v.nome, min: min, max: max, obrigatoria: !!(v.obrigatoria || min > 0), opcoes: v.opcoes });
     });
-    if (produto.sabores && produto.sabores.length) grupos.push({ id: 'sabor', nome: 'Sabor', min: 1, max: 1, obrigatoria: true, opcoes: produto.sabores.map(function (s) { return typeof s === 'object' ? s : { nome: s }; }) });
+    if (produto.sabores && produto.sabores.length) grupos.push({ id: 'sabor', nome: 'Sabor do bolo', min: 1, max: 1, obrigatoria: true, opcoes: produto.sabores.map(function (s) { return typeof s === 'object' ? s : { nome: s }; }) });
     if (produto.tamanhos && produto.tamanhos.length) grupos.push({ id: 'tamanho', nome: 'Tamanho', min: 1, max: 1, obrigatoria: true, opcoes: produto.tamanhos.map(function (s) { return typeof s === 'object' ? s : { nome: s }; }) });
 
     sel = { variacoes: {}, adicionais: [], qty: Math.max(1, produto.quantidadeMinima || 1), observacao: '' };
@@ -78,12 +78,12 @@ window.SS = window.SS || {};
       var rangeTxt = g.min === g.max ? (g.min === 1 ? 'Escolha 1 opção' : 'Escolha ' + g.min + ' opções') : (g.min === 0 ? 'Escolha até ' + g.max + ' opção' + (g.max > 1 ? 'ões' : '') : 'Escolha de ' + g.min + ' a ' + g.max + ' opções');
       html += '<div class="prod-opts" data-gid="' + u.esc(g.id) + '"><div class="prod-opts__head"><h4>' + u.esc(g.nome) + (g.obrigatoria ? ' <span style="color:var(--danger)">*</span>' : '') + '</h4><span class="prod-opts__meta"><span class="prod-opts__count" data-count="' + u.esc(g.id) + '">0 / ' + g.max + '</span> · ' + u.esc(rangeTxt) + (g.obrigatoria ? ' · <span style="color:var(--danger);font-weight:700">OBRIGATÓRIO</span>' : '') + '</span></div>';
       if (isCb) {
-        html += '<div class="opts" role="group" aria-label="' + u.esc(g.nome) + '">' + g.opcoes.map(function (o) {
+        html += '<div class="opts' + (g.id === 'sabor' || g.nome.toLowerCase().indexOf('sabor') !== -1 ? ' opts--grid2' : '') + '" role="group" aria-label="' + u.esc(g.nome) + '">' + g.opcoes.map(function (o) {
           var ac = Number(o.acrescimo) > 0 ? ' <span class="opt__price">+' + u.fmtBRL(o.acrescimo) + '</span>' : '';
           return '<label class="opt opt--checkbox" data-grupo="' + u.esc(g.id) + '"><input type="checkbox" value="' + u.esc(o.nome) + '" data-acrescimo="' + (Number(o.acrescimo) || 0) + '"><span class="opt__dot" aria-hidden="true"></span><span class="opt__label">' + u.esc(o.nome) + ac + '</span></label>';
         }).join('') + '</div>';
       } else {
-        html += '<div class="opts" role="radiogroup" aria-label="' + u.esc(g.nome) + '">' + g.opcoes.map(function (o) {
+        html += '<div class="opts' + (g.id === 'sabor' || g.nome.toLowerCase().indexOf('sabor') !== -1 ? ' opts--grid2' : '') + '" role="radiogroup" aria-label="' + u.esc(g.nome) + '">' + g.opcoes.map(function (o) {
           var ac = Number(o.acrescimo) > 0 ? ' <span class="opt__price">+' + u.fmtBRL(o.acrescimo) + '</span>' : '';
           return '<label class="opt" data-grupo="' + g.id + '"><input type="radio" name="' + u.esc(g.id) + '" value="' + u.esc(o.nome) + '" data-acrescimo="' + (Number(o.acrescimo) || 0) + '"><span class="opt__dot" aria-hidden="true"></span><span class="opt__label">' + u.esc(o.nome) + ac + '</span></label>';
         }).join('') + '</div>';
@@ -99,6 +99,7 @@ window.SS = window.SS || {};
 
     html += '<div class="prod-opts"><h4>Quantidade <span style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0;font-size:12.5px">(mínimo ' + (produto.quantidadeMinima || 1) + ')</span></h4><div class="qty" style="height:52px"><button type="button" data-qtd="-1" aria-label="Diminuir">−</button><input type="text" inputmode="numeric" id="qty-input" value="1" aria-label="Quantidade"><button type="button" data-qtd="1" aria-label="Aumentar">+</button></div></div><div class="prod-opts"><h4>Observações</h4><textarea class="form-control" id="obs-input" rows="2" placeholder="' + u.esc(produto.observacoes || 'Alguma observação sobre o seu pedido?') + '"></textarea></div>';
     wrap.innerHTML = html;
+    wrap.querySelectorAll('.prod-opts[data-gid="sabor"]').forEach(function (el) { if (el.querySelectorAll('.opt').length > 4) el.classList.add('has-scroll'); });
 
     function syncCount(g) {
       var c = wrap.querySelector('[data-count="' + g.id + '"]');
@@ -185,7 +186,7 @@ window.SS = window.SS || {};
     document.title = produto.nome + ' — Sublime Sonhos';
     document.getElementById('bc-cat').innerHTML = '<a href="index.html#cat-' + encodeURIComponent(produto.categoria) + '">' + u.esc(SS.catalog.db.getCategoriaNome(produto.categoria) || 'Produtos') + '</a>';
     document.getElementById('bc-nome').textContent = produto.nome;
-    var semPreco = produto.preco === null || produto.preco === undefined;
+    var semPreco = produto.precoSobConsulta || produto.preco === null || produto.preco === undefined;
     var selos = '';
     if (produto.esgotado) selos += '<span class="badge badge--ink">Esgotado</span>';
     if (produto.prontaEntrega) selos += '<span class="badge badge--green">Pronta entrega</span>';
@@ -194,12 +195,12 @@ window.SS = window.SS || {};
     var main = galeria[0] || '';
     var thumbs = galeria.map(function (src, i) { return '<button type="button" class="' + (i === 0 ? 'active' : '') + '" data-gal="' + i + '" aria-label="Ver imagem ' + (i + 1) + '"><img src="' + u.esc(src) + '" alt="' + u.esc(produto.nome) + ' — foto ' + (i + 1) + '" loading="lazy"></button>'; }).join('');
     var esgotado = !!produto.esgotado;
-    var temOpcoes = (produto.variacoes && produto.variacoes.length) || (produto.sabores && produto.sabores.length) || (produto.tamanhos && produto.tamanhos.length) || (produto.adicionais && produto.adicionais.length);
-    var podeAdicionar = !esgotado && (temOpcoes || !semPreco);
+    var isAgendamento = produto.encomenda && !produto.prontaEntrega;
+    var podeAdicionar = !esgotado && !semPreco && !isAgendamento;
     el.innerHTML =
       '<div class="prod-grid">' +
         '<div class="gallery reveal"><div class="gallery__main">' + (main ? '<img id="gal-main" src="' + u.esc(main) + '" alt="' + u.esc(produto.nome) + '">' : '<div style="width:100%;height:100%;display:grid;place-items:center;color:var(--muted)">Sem foto</div>') + '</div>' + (thumbs ? '<div class="gallery__thumbs">' + thumbs + '</div>' : '') + '</div>' +
-        '<div class="prod-info reveal"><div class="product-card__badges" style="position:static;margin-bottom:10px">' + selos + '</div><h1 class="prod-info__title">' + u.esc(produto.nome) + '</h1><a class="prod-info__cat text-sm" href="index.html#cat-' + encodeURIComponent(produto.categoria) + '" style="color:var(--rose-600);font-weight:700">' + u.esc(SS.catalog.db.getCategoriaNome(produto.categoria)) + '</a><p class="prod-info__desc">' + u.esc(produto.descricao || '') + '</p><div class="prod-info__price" id="p-preco"></div><ul class="prod-info__meta"><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>' + (produto.prontaEntrega ? 'Disponível para pronta entrega (confirme a disponibilidade do dia pelo WhatsApp).' : 'Produzido sob encomenda — ' + (produto.prazoProducaoDias || 0) + ' dia' + ((produto.prazoProducaoDias || 0) === 1 ? '' : 's') + ' de antecedência mínima.') + '</span></li>' + (produto.conservacao ? '<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Conservação: ' + u.esc(produto.conservacao) + '</span></li>' : '') + '<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span>Pedido enviado pelo WhatsApp e confirmado pela loja.</span></li></ul><div id="prod-opcoes"></div><div class="prod-actions">' + (esgotado ? '<button type="button" class="btn btn--outline btn--lg" disabled>Produto esgotado</button>' : podeAdicionar ? '<button type="button" class="btn btn--primary btn--lg" id="btn-add-cart">Adicionar ao carrinho</button><button type="button" class="btn btn--dark btn--lg" id="btn-buy-now">Comprar agora</button>' : '<a class="btn btn--primary btn--lg w-full" href="encomenda.html">Encomendar este produto</a>') + '</div><p class="text-sm text-muted mt-2">Entrega: ' + u.esc(SS.config.loja.entrega.nota) + '</p></div>' +
+        '<div class="prod-info reveal"><div class="product-card__badges" style="position:static;margin-bottom:10px">' + selos + '</div><h1 class="prod-info__title">' + u.esc(produto.nome) + '</h1><a class="prod-info__cat text-sm" href="index.html#cat-' + encodeURIComponent(produto.categoria) + '" style="color:var(--rose-600);font-weight:700">' + u.esc(SS.catalog.db.getCategoriaNome(produto.categoria)) + '</a><p class="prod-info__desc">' + u.esc(produto.descricao || '') + '</p><div class="prod-info__price" id="p-preco"></div><ul class="prod-info__meta"><li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>' + (produto.prontaEntrega ? 'Disponível para pronta entrega (confirme a disponibilidade do dia pelo WhatsApp).' : 'Produzido sob encomenda — ' + (produto.prazoProducaoDias || 0) + ' dia' + ((produto.prazoProducaoDias || 0) === 1 ? '' : 's') + ' de antecedência mínima.') + '</span></li>' + (produto.conservacao ? '<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Conservação: ' + u.esc(produto.conservacao) + '</span></li>' : '') + '<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span>Pedido enviado pelo WhatsApp e confirmado pela loja.</span></li></ul><div id="prod-opcoes"></div><div class="prod-actions">' + (esgotado ? '<button type="button" class="btn btn--outline btn--lg" disabled>Produto esgotado</button>' : podeAdicionar ? '<button type="button" class="btn btn--primary btn--lg" id="btn-add-cart">Adicionar ao carrinho</button><button type="button" class="btn btn--dark btn--lg" id="btn-buy-now">Comprar agora</button>' : '<a class="btn btn--primary btn--lg w-full" href="encomendaagendada.html?produto=' + encodeURIComponent(produto.id) + '">Encomendar este produto</a>') + '</div><p class="text-sm text-muted mt-2">Entrega: ' + u.esc(SS.config.loja.entrega.nota) + '</p></div>' +
       '</div>';
     el.querySelectorAll('[data-gal]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -208,6 +209,22 @@ window.SS = window.SS || {};
         if (img) img.src = galeria[i];
         el.querySelectorAll('[data-gal]').forEach(function (x) { x.classList.toggle('active', x === b); });
       });
+    });
+    var encLink = el.querySelector('a[href^="encomenda.html"]');
+    if (encLink) encLink.addEventListener('click', function () { try { sessionStorage.setItem('ss_encomenda_produto', produto.id); } catch (e) {} });
+    // Intercepta clique no botão "Encomendar este produto" (produto agendado) para também adicionar ao carrinho (carrinho misto)
+    var encBtn = el.querySelector('a[href^="encomendaagendada.html"]');
+    if (encBtn) encBtn.addEventListener('click', function (e) {
+      try {
+        // coleta seleção atual se houver opções renderizadas, senão envia seleção vazia (será configurada em encomendaagendada)
+        var selEnc = sel && sel.variacoes !== undefined ? sel : { variacoes: {}, adicionais: [], qty: Math.max(1, produto.quantidadeMinima || 1), observacao: '' };
+        // se produto tem opções mas não renderizou (caso agendamento), garante quantidade mínima
+        if (!selEnc.qty) selEnc.qty = Math.max(1, produto.quantidadeMinima || 1);
+        var obsEl = document.getElementById('obs-input');
+        if (obsEl) selEnc.observacao = obsEl.value.trim();
+        else if (document.getElementById('qty-input')) selEnc.qty = Math.max(produto.quantidadeMinima || 1, Number(document.getElementById('qty-input').value) || 1);
+        SS.cart.adicionar(produto, { variacoes: selEnc.variacoes || {}, adicionais: selEnc.adicionais || [], qty: selEnc.qty, observacao: selEnc.observacao || '' });
+      } catch (e2) {}
     });
     if (podeAdicionar) {
       renderOpcoes(); renderPreco();

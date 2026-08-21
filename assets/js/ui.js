@@ -472,6 +472,106 @@ window.SS = window.SS || {};
   }
 
   /* ------------------------------------------------------------------ */
+  /* DATE PICKER — calendário bonito para Data desejada                  */
+  /* ------------------------------------------------------------------ */
+  function criarDatePicker(input, opts) {
+    if (!input || input.dataset.dpInit) return;
+    input.dataset.dpInit = '1';
+    var minISO = opts && opts.min ? opts.min : '';
+    var onSelect = opts && opts.onSelect ? opts.onSelect : null;
+    var wrap = document.createElement('div');
+    wrap.className = 'dp-wrap';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    input.type = 'text';
+    input.readOnly = true;
+    input.classList.add('dp-input');
+    input.placeholder = 'Selecione a data';
+    input.autocomplete = 'off';
+    if (input.value && /^\d{4}-\d{2}-\d{2}$/.test(input.value)) {
+      var dtmp = SS.utils.dataDeInput(input.value);
+      input.value = dtmp ? SS.utils.fmtData(input.value) : '';
+      input.dataset.iso = opts && opts.isoVal ? opts.isoVal : (dtmp ? SS.utils.dataParaInput(dtmp) : '');
+    }
+    if (opts && opts.isoVal) { input.dataset.iso = opts.isoVal; if (opts.isoVal) input.value = SS.utils.fmtData(opts.isoVal); }
+    var trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'dp-trigger';
+    trigger.setAttribute('aria-label', 'Abrir calendário');
+    trigger.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+    wrap.appendChild(trigger);
+    var cal = document.createElement('div');
+    cal.className = 'dp-calendar';
+    cal.hidden = true;
+    wrap.appendChild(cal);
+    var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    var view = new Date();
+    if (input.dataset.iso) { var pd = SS.utils.dataDeInput(input.dataset.iso); if (pd) view = new Date(pd.getFullYear(), pd.getMonth(), 1); }
+    else if (minISO) { var md = SS.utils.dataDeInput(minISO); if (md) view = new Date(md.getFullYear(), md.getMonth(), 1); }
+    else { view = new Date(view.getFullYear(), view.getMonth(), 1); }
+    view.setDate(1);
+    function isoDe(d){ return SS.utils.dataParaInput(d); }
+    function renderCal(){
+      var y = view.getFullYear(), m = view.getMonth();
+      var first = new Date(y,m,1);
+      var startDay = first.getDay();
+      var daysInMonth = new Date(y,m+1,0).getDate();
+      var prevDays = new Date(y,m,0).getDate();
+      var minD = minISO ? SS.utils.dataDeInput(minISO) : null;
+      if (minD) minD.setHours(0,0,0,0);
+      var selISO = input.dataset.iso || '';
+      var hojeISO = SS.utils.hojeISO();
+      var head = '<div class="dp-head"><button type="button" class="dp-nav" data-dp-nav="-1" aria-label="Mês anterior"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button><div class="dp-title">' + meses[m] + ' ' + y + '</div><button type="button" class="dp-nav" data-dp-nav="1" aria-label="Próximo mês"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></button></div>';
+      var weekdays = ['D','S','T','Q','Q','S','S'].map(function(d){ return '<div class="dp-weekday">' + d + '</div>'; }).join('');
+      var cells = '';
+      for (var i=0;i<startDay;i++){ var dPrev = prevDays - startDay + 1 + i; cells += '<div class="dp-day dp-day--muted dp-day--disabled">' + dPrev + '</div>'; }
+      for (var d=1; d<=daysInMonth; d++){
+        var cur = new Date(y,m,d); cur.setHours(0,0,0,0);
+        var iso = isoDe(cur);
+        var isDisabled = minD && cur < minD;
+        var isSel = selISO === iso;
+        var isHoje = hojeISO === iso;
+        var cls = 'dp-day' + (isDisabled ? ' dp-day--disabled' : '') + (isSel ? ' dp-day--selected' : '') + (isHoje ? ' dp-day--today' : '');
+        cells += '<button type="button" class="' + cls + '" data-iso="' + iso + '"' + (isDisabled ? ' disabled' : '') + '>' + d + '</button>';
+      }
+      var total = startDay + daysInMonth;
+      var rest = (7 - (total % 7)) % 7;
+      for (var r=1; r<=rest; r++){ cells += '<div class="dp-day dp-day--muted dp-day--disabled">' + r + '</div>'; }
+      var foot = '<div class="dp-foot"><span>' + (minISO ? 'A partir de ' + SS.utils.fmtData(minISO) : 'Selecione a data') + '</span><button type="button" data-dp-clear>Limpar</button></div>';
+      cal.innerHTML = head + '<div class="dp-grid">' + weekdays + cells + '</div>' + foot;
+      cal.querySelectorAll('[data-dp-nav]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); view.setMonth(view.getMonth() + Number(b.dataset.dpNav)); view.setDate(1); renderCal(); }); });
+      cal.querySelectorAll('.dp-day[data-iso]').forEach(function(b){
+        if (b.disabled) return;
+        b.addEventListener('click', function(){
+          var iso2 = b.dataset.iso;
+          input.dataset.iso = iso2;
+          input.value = SS.utils.fmtData(iso2);
+          cal.hidden = true;
+          input.dispatchEvent(new Event('change', {bubbles:true}));
+          input.dispatchEvent(new Event('input', {bubbles:true}));
+          if (onSelect) onSelect(iso2);
+          wrap.closest('.form-group') && wrap.closest('.form-group').classList.remove('invalid');
+        });
+      });
+      var clr = cal.querySelector('[data-dp-clear]');
+      if (clr) clr.addEventListener('click', function(){ input.dataset.iso=''; input.value=''; cal.hidden=true; input.dispatchEvent(new Event('change',{bubbles:true})); if(onSelect) onSelect(''); });
+    }
+    function openCal(){ renderCal(); cal.hidden=false; }
+    function closeCal(){ cal.hidden=true; }
+    trigger.addEventListener('click', function(e){ e.stopPropagation(); cal.hidden ? openCal() : closeCal(); });
+    input.addEventListener('click', function(){ cal.hidden ? openCal() : closeCal(); });
+    document.addEventListener('click', function(e){ if (!wrap.contains(e.target)) closeCal(); });
+    document.addEventListener('keydown', function(e){ if (e.key==='Escape') closeCal(); });
+    input._dpSetMin = function(newMin){ minISO = newMin; };
+    input._dpClose = closeCal;
+  }
+  function initDatePicker(input, minISO, onSelect, isoVal){
+    if (typeof input === 'string') input = document.querySelector(input);
+    if (!input) return;
+    criarDatePicker(input, {min:minISO, onSelect:onSelect, isoVal:isoVal});
+  }
+
+  /* ------------------------------------------------------------------ */
   /* INICIALIZAÇÃO                                                       */
   /* ------------------------------------------------------------------ */
   function init() {
@@ -493,5 +593,7 @@ window.SS = window.SS || {};
     renderCartDrawer: renderCartDrawer,
     observeReveal: observeReveal,
     initCustomSelects: initCustomSelects,
+    createDatePicker: criarDatePicker,
+    initDatePicker: initDatePicker,
   };
 })(window.SS);

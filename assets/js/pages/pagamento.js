@@ -330,9 +330,10 @@ window.SS = window.SS || {};
       var t = e.target;
       if (t.name === 'momento') {
         dados.momentoPagamento = t.value;
-        dados.pagamento = ''; dados.card = { numero: '', nome: '', validade: '', cvv: '', parcelas: '1' };
-        dados.troco = false; dados.trocoPara = ''; dados.pagamentoAprovado = false; dados._pixCopiaECola = '';
-        atualizarMetodos(); dinamicoEl.innerHTML = ''; atualizarTroco();
+        // mantém forma já escolhida (mesma lista para antecipado/na-entrega) — apenas reseta estado de aprovação
+        dados.pagamentoAprovado = false;
+        // preserva dados.pagamento; apenas limpa pix/card se trocar de tipo? mantém para não perder seleção
+        atualizarMetodos(); atualizarDinamico(); atualizarTroco();
         if (gForma) gForma.classList.remove('invalid'); return;
       }
       if (t.name === 'f-forma') {

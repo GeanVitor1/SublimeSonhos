@@ -122,10 +122,11 @@ window.SS = window.SS || {};
       var min = dataMinimaISO();
       var horarios = [];
       for (var h = 8; h <= 19; h++) horarios.push('<option value="' + String(h).padStart(2,'0') + ':00"' + (dados.hora === String(h).padStart(2,'0') + ':00' ? ' selected' : '') + '>' + String(h).padStart(2,'0') + ':00</option>');
+      var dataFmtBolo = dados.data ? u.fmtData(dados.data) : '';
       html =
         '<div class="panel"><h2><span class="n">4</span> Data, contato e entrega</h2><div class="panel__body">' +
           '<div class="form-grid">' +
-            '<div class="form-group" id="g-data"><label class="form-label" for="f-data">Data desejada <span class="req">*</span></label><input class="form-control" id="f-data" type="date" min="' + min + '" value="' + u.esc(dados.data) + '"><div class="form-error">Escolha uma data (mínimo 3 dias).</div><p class="form-hint">Sujeito à confirmação da loja.</p></div>' +
+            '<div class="form-group" id="g-data"><label class="form-label" for="f-data">Data desejada <span class="req">*</span></label><input class="form-control dp-input" id="f-data" type="text" readonly placeholder="Selecione a data" value="' + u.esc(dataFmtBolo) + '" data-iso="' + u.esc(dados.data) + '"><div class="form-error">Escolha uma data (mínimo 3 dias).</div><p class="form-hint">Sujeito à confirmação da loja.</p></div>' +
             '<div class="form-group" id="g-hora"><label class="form-label" for="f-hora">Horário <span class="req">*</span></label><select class="form-control" id="f-hora"><option value="">Selecione…</option>' + horarios.join('') + '</select><div class="form-error">Escolha o horário.</div></div>' +
             '<div class="form-group" id="g-nome"><label class="form-label" for="f-nome">Nome completo <span class="req">*</span></label><input class="form-control" id="f-nome" type="text" autocomplete="name" value="' + u.esc(dados.nome) + '"><div class="form-error">Informe seu nome.</div></div>' +
             '<div class="form-group" id="g-telefone"><label class="form-label" for="f-telefone">WhatsApp <span class="req">*</span></label><input class="form-control" id="f-telefone" type="tel" inputmode="tel" placeholder="(73) 90000-0000" value="' + u.esc(dados.telefone) + '"><div class="form-error">Informe um telefone válido.</div></div>' +
@@ -187,7 +188,10 @@ window.SS = window.SS || {};
   }
   function initPasso4() {
     var d=document.getElementById('f-data');
-    if(d){ d.addEventListener('change', function(){ dados.data=d.value; document.getElementById('g-data').classList.remove('invalid'); renderResumo(); }); d.addEventListener('input', function(){ dados.data=d.value; if(d.value) document.getElementById('g-data').classList.remove('invalid'); renderResumo(); }); }
+    if(d && SS.ui && SS.ui.initDatePicker){
+      SS.ui.initDatePicker(d, dataMinimaISO(), function(iso){ dados.data=iso; document.getElementById('g-data').classList.remove('invalid'); renderResumo(); }, dados.data);
+      d.addEventListener('change', function(){ var iso=d.dataset.iso||d.value; dados.data=iso||''; document.getElementById('g-data').classList.remove('invalid'); renderResumo(); });
+    } else if(d){ d.addEventListener('change', function(){ dados.data=d.dataset.iso||d.value; document.getElementById('g-data').classList.remove('invalid'); renderResumo(); }); d.addEventListener('input', function(){ dados.data=d.dataset.iso||d.value; if(d.value) document.getElementById('g-data').classList.remove('invalid'); renderResumo(); }); }
     var h=document.getElementById('f-hora');
     if(h) h.addEventListener('change', function(){ dados.hora=h.value; document.getElementById('g-hora').classList.remove('invalid'); renderResumo(); });
     var nome=document.getElementById('f-nome'); if(nome) nome.addEventListener('input', function(){ dados.nome=nome.value.trim(); document.getElementById('g-nome').classList.remove('invalid'); renderResumo(); });

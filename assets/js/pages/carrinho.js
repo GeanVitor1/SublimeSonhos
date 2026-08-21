@@ -66,7 +66,7 @@ window.SS = window.SS || {};
       '<div class="steps-bar" aria-hidden="true">' + passos.join('') + '</div>' +
       '<div class="checkout-grid">' +
         '<div id="painel-esquerda"></div>' +
-        '<aside class="panel" id="painel-resumo" style="position:sticky;top:calc(var(--header-h) + 20px)"></aside>' +
+        '<aside class="panel" id="painel-resumo"></aside>' +
       '</div>';
 
     renderResumo(itens, sobConsulta);

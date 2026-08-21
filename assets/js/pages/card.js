@@ -30,7 +30,8 @@ window.SS = window.SS || {};
 
   function render(p) {
     var semPreco = p.precoSobConsulta || p.preco === null || p.preco === undefined;
-    var podeAdd = !semPreco && !p.esgotado;
+    var isAgendamento = p.encomenda && !p.prontaEntrega;
+    var podeAdd = !semPreco && !p.esgotado && !isAgendamento;
     var nomeCat = SS.catalog.db.getCategoriaNome(p.categoria) || 'Nossos doces';
     var imgSrc = (p.imagens && p.imagens.length) ? p.imagens[0] : '';
     var quickLabel = podeAdd ? 'Ver detalhes' : (p.esgotado ? 'Ver detalhes' : 'Consultar valores');
@@ -47,9 +48,13 @@ window.SS = window.SS || {};
           (p.descricaoCurta ? '<p class="product-card__desc">' + u.esc(p.descricaoCurta) + '</p>' : '') +
           '<div class="product-card__foot">' +
             precoHtml(p) +
-            (podeAdd
-              ? '<button type="button" class="btn btn--primary btn--sm product-card__add" data-add="' + u.esc(p.id) + '" aria-label="Adicionar ' + u.esc(p.nome) + ' ao carrinho">' + ICON_CART + '<span>Adicionar</span></button>'
-              : '<button type="button" class="btn btn--outline btn--sm product-card__detail" data-quick="' + u.esc(p.id) + '">' + (p.esgotado ? 'Ver detalhes' : 'Consultar valores') + '</button>') +
+            (p.esgotado
+              ? '<button type="button" class="btn btn--outline btn--sm product-card__detail" data-quick="' + u.esc(p.id) + '">Ver detalhes</button>'
+              : podeAdd
+                ? '<button type="button" class="btn btn--primary btn--sm product-card__add" data-add="' + u.esc(p.id) + '" aria-label="Adicionar ' + u.esc(p.nome) + ' ao carrinho">' + ICON_CART + '<span>Adicionar</span></button>'
+                : (semPreco || isAgendamento)
+                  ? '<button type="button" class="btn btn--primary btn--sm" data-quick="' + u.esc(p.id) + '">Encomendar</button>'
+                  : '<button type="button" class="btn btn--outline btn--sm product-card__detail" data-quick="' + u.esc(p.id) + '">Ver detalhes</button>') +
           '</div>' +
         '</div>' +
       '</article>'
@@ -59,7 +64,7 @@ window.SS = window.SS || {};
   var modalState = null;
 
   function isCheckboxGroup(g) {
-    return (g.max !== undefined && g.max !== null) || (g.min !== undefined && g.min !== null && g.min >= 0);
+    return g.max > 1;
   }
 
   function montarGrupos(p) {
@@ -69,7 +74,7 @@ window.SS = window.SS || {};
       var max = v.max !== undefined && v.max !== null ? v.max : 1;
       grupos.push({ id: v.id || ('var_' + grupos.length), nome: v.nome, min: min, max: max, obrigatoria: !!(v.obrigatoria || min > 0), opcoes: v.opcoes });
     });
-    if (p.sabores && p.sabores.length) grupos.push({ id: 'sabor', nome: 'Sabor', min: 1, max: 1, obrigatoria: true, opcoes: p.sabores.map(function (s) { return typeof s === 'object' ? s : { nome: s }; }) });
+    if (p.sabores && p.sabores.length) grupos.push({ id: 'sabor', nome: 'Sabor do bolo', min: 1, max: 1, obrigatoria: true, opcoes: p.sabores.map(function (s) { return typeof s === 'object' ? s : { nome: s }; }) });
     if (p.tamanhos && p.tamanhos.length) grupos.push({ id: 'tamanho', nome: 'Tamanho', min: 1, max: 1, obrigatoria: true, opcoes: p.tamanhos.map(function (s) { return typeof s === 'object' ? s : { nome: s }; }) });
     return grupos;
   }
@@ -121,7 +126,7 @@ window.SS = window.SS || {};
     if (!dest) return;
     var html = '';
     grupos.forEach(function (g) {
-      var isCb = isCheckboxGroup(g) && !(g.min === 1 && g.max === 1);
+      var isCb = isCheckboxGroup(g);
       var rangeTxt = g.min === g.max ? (g.min === 1 ? 'Escolha 1 opção' : 'Escolha ' + g.min + ' opções') : (g.min === 0 ? 'Escolha até ' + g.max + ' opção' + (g.max > 1 ? 'ões' : '') : 'Escolha de ' + g.min + ' a ' + g.max + ' opções');
       html +=
         '<div class="prod-opts" data-gid="' + u.esc(g.id) + '">' +
@@ -130,13 +135,13 @@ window.SS = window.SS || {};
             '<span class="prod-opts__meta"><span class="prod-opts__count" data-count="' + u.esc(g.id) + '">0 / ' + g.max + '</span> · ' + u.esc(rangeTxt) + (g.obrigatoria ? ' · <span style="color:var(--danger);font-weight:700">OBRIGATÓRIO</span>' : '') + '</span>' +
           '</div>';
       if (isCb) {
-        html += '<div class="opts" role="group" aria-label="' + u.esc(g.nome) + '">' +
+        html += '<div class="opts' + (g.id === 'sabor' || g.nome.toLowerCase().indexOf('sabor') !== -1 ? ' opts--grid2' : '') + '" role="group" aria-label="' + u.esc(g.nome) + '">' +
           g.opcoes.map(function (o) {
             var acrescimo = Number(o.acrescimo) > 0 ? ' <span class="opt__price">+' + u.fmtBRL(o.acrescimo) + '</span>' : '';
             return '<label class="opt opt--checkbox" data-grupo="' + u.esc(g.id) + '"><input type="checkbox" value="' + u.esc(o.nome) + '" data-acrescimo="' + (Number(o.acrescimo) || 0) + '"><span class="opt__dot" aria-hidden="true"></span><span class="opt__label">' + u.esc(o.nome) + acrescimo + '</span></label>';
           }).join('') + '</div>';
       } else {
-        html += '<div class="opts" role="radiogroup" aria-label="' + u.esc(g.nome) + '">' +
+        html += '<div class="opts' + (g.id === 'sabor' || g.nome.toLowerCase().indexOf('sabor') !== -1 ? ' opts--grid2' : '') + '" role="radiogroup" aria-label="' + u.esc(g.nome) + '">' +
           g.opcoes.map(function (o) {
             var acrescimo = Number(o.acrescimo) > 0 ? ' <span class="opt__price">+' + u.fmtBRL(o.acrescimo) + '</span>' : '';
             return '<label class="opt" data-grupo="' + u.esc(g.id) + '"><input type="radio" name="pm-' + u.esc(g.id) + '" value="' + u.esc(o.nome) + '" data-acrescimo="' + (Number(o.acrescimo) || 0) + '"><span class="opt__dot" aria-hidden="true"></span><span class="opt__label">' + u.esc(o.nome) + acrescimo + '</span></label>';
@@ -159,7 +164,7 @@ window.SS = window.SS || {};
         '<div class="qty" style="height:48px"><button type="button" data-qtd="-1" aria-label="Diminuir quantidade">−</button><input type="text" inputmode="numeric" id="pm-qty" value="' + sel.qty + '" aria-label="Quantidade"><button type="button" data-qtd="1" aria-label="Aumentar quantidade">+</button></div>' +
       '</div>';
     dest.innerHTML = html;
-
+    dest.querySelectorAll('.prod-opts[data-gid="sabor"]').forEach(function (el) { if (el.querySelectorAll('.opt').length > 4) el.classList.add('has-scroll'); });
     function syncCount(g) {
       var c = dest.querySelector('[data-count="' + g.id + '"]');
       if (c) c.textContent = selArray(g, sel).length + ' / ' + g.max;
@@ -173,7 +178,7 @@ window.SS = window.SS || {};
     }
 
     grupos.forEach(function (g) {
-      var isCb = isCheckboxGroup(g) && !(g.min === 1 && g.max === 1);
+      var isCb = isCheckboxGroup(g);
       if (!isCb) return;
       var inputs = dest.querySelectorAll('.opt[data-grupo="' + g.id + '"] input[type="checkbox"]');
       inputs.forEach(function (inp) {
@@ -196,6 +201,18 @@ window.SS = window.SS || {};
     });
 
     dest.querySelectorAll('.opt input[type="radio"]').forEach(function (inp) {
+      inp.addEventListener('click', function () {
+        var lbl = inp.closest('.opt');
+        var gid = lbl.getAttribute('data-grupo');
+        var gDef = grupos.filter(function (gg) { return gg.id === gid; })[0];
+        if (gDef && gDef.min === 0 && lbl.classList.contains('selected')) {
+          inp.checked = false;
+          lbl.classList.remove('selected');
+          delete sel.variacoes[gid];
+          renderModalPreco(p, grupos, sel, wrap);
+          return;
+        }
+      });
       inp.addEventListener('change', function () {
         var lbl = inp.closest('.opt');
         var g = lbl.getAttribute('data-grupo');
@@ -232,12 +249,13 @@ window.SS = window.SS || {};
     fecharModalProduto();
     var semPreco = p.precoSobConsulta || p.preco === null || p.preco === undefined;
     var esgotado = !!p.esgotado;
+    var isAgendamento = p.encomenda && !p.prontaEntrega;
     var grupos = (!esgotado) ? montarGrupos(p) : [];
     var hasOpcoes = grupos.length > 0 || (p.adicionais && p.adicionais.length);
-    var podeAdicionar = !esgotado && (hasOpcoes || !semPreco);
+    var podeAdicionar = !esgotado && !semPreco && !isAgendamento;
     var sel = { variacoes: {}, adicionais: [], qty: Math.max(1, p.quantidadeMinima || 1), observacao: '' };
     grupos.forEach(function (g) {
-      if (isCheckboxGroup(g) && !(g.min === 1 && g.max === 1)) sel.variacoes[g.id] = [];
+      if (isCheckboxGroup(g)) sel.variacoes[g.id] = [];
     });
     var img = (p.imagens && p.imagens[0]) || '';
 
@@ -255,12 +273,12 @@ window.SS = window.SS || {};
               '<h3 class="modal__title">' + u.esc(p.nome) + '</h3>' +
               (p.descricao ? '<p class="modal__desc">' + u.esc(p.descricao) + '</p>' : '') +
               '<div class="modal__price" id="pm-preco"></div>' +
-              (podeAdicionar ? '<div id="pm-opcoes"></div>' : (esgotado ? '' : '<p class="text-sm text-muted" style="margin-top:10px">Este produto é sob consulta. Use o botão abaixo para fazer sua encomenda.</p>')) +
-              (podeAdicionar ? '<div class="form-group" style="margin-top:16px"><label class="form-label form-label--row" for="pm-obs">Alguma observação? <span class="form-count" id="pm-count">0 / 140</span></label><textarea class="form-control" id="pm-obs" rows="3" maxlength="140" placeholder="' + u.esc(p.observacoes || 'Ex.: caprichar na decoração ou escrever uma mensagem especial...') + '"></textarea></div>' : '') +
+              (!esgotado && hasOpcoes ? '<div id="pm-opcoes"></div>' : (esgotado ? '' : (!hasOpcoes ? '<p class="text-sm text-muted" style="margin-top:10px">Este produto é sob consulta. Use o botão abaixo para fazer sua encomenda.</p>' : ''))) +
+              (!esgotado ? '<div class="form-group" style="margin-top:16px"><label class="form-label form-label--row" for="pm-obs">Alguma observação? <span class="form-count" id="pm-count">0 / 140</span></label><textarea class="form-control" id="pm-obs" rows="3" maxlength="140" placeholder="' + u.esc(p.observacoes || 'Ex.: caprichar na decoração ou escrever uma mensagem especial...') + '"></textarea></div>' : '') +
             '</div>' +
           '</div>' +
           '<div class="modal__foot">' +
-            (esgotado ? '<button type="button" class="btn btn--outline btn--lg" disabled>Produto esgotado</button>' : podeAdicionar ? '<button type="button" class="btn btn--primary btn--lg" id="pm-add">Adicionar ao carrinho</button>' : '<a class="btn btn--primary btn--lg" href="encomenda.html">Encomendar este produto</a>') +
+            (esgotado ? '<button type="button" class="btn btn--outline btn--lg" disabled>Produto esgotado</button>' : podeAdicionar ? '<button type="button" class="btn btn--primary btn--lg" id="pm-add">Adicionar ao carrinho</button>' : '<button type="button" class="btn btn--primary btn--lg" id="pm-encomendar">Encomendar este produto</button>') +
           '</div>' +
         '</div>' +
       '</div>';
@@ -274,32 +292,61 @@ window.SS = window.SS || {};
     var onKey = function (e) { if (e.key === 'Escape') fechar(); };
     document.addEventListener('keydown', onKey);
 
-    if (podeAdicionar) {
-      renderModalOpcoes(p, grupos, sel, overlay);
+    if (!esgotado) {
+      if (hasOpcoes) renderModalOpcoes(p, grupos, sel, overlay);
       renderModalPreco(p, grupos, sel, overlay);
       var obsEl = overlay.querySelector('#pm-obs');
-      if (obsEl) obsEl.addEventListener('input', function () { overlay.querySelector('#pm-count').textContent = this.value.length + ' / 140'; });
-      overlay.querySelector('#pm-add').addEventListener('click', function () {
-        var faltando = grupos.filter(function (g) {
-          var n = selArray(g, sel).length;
-          if (g.obrigatoria && n < g.min) return true;
-          if (n > g.max) return true;
-          return false;
+      if (obsEl) obsEl.addEventListener('input', function () { var c=overlay.querySelector('#pm-count'); if(c) c.textContent = this.value.length + ' / 140'; });
+      if (podeAdicionar) {
+        var addBtn = overlay.querySelector('#pm-add');
+        if (addBtn) addBtn.addEventListener('click', function () {
+          var faltando = grupos.filter(function (g) {
+            var n = selArray(g, sel).length;
+            if (g.obrigatoria && n < g.min) return true;
+            if (n > g.max) return true;
+            return false;
+          });
+          if (faltando.length) {
+            SS.ui.toast('Selecione: ' + faltando.map(function (g) { return g.nome + ' (' + g.min + '-' + g.max + ')'; }).join(', '), 'error');
+            return;
+          }
+          sel.qty = Math.max(p.quantidadeMinima || 1, Number(overlay.querySelector('#pm-qty').value) || 1);
+          sel.observacao = overlay.querySelector('#pm-obs') ? overlay.querySelector('#pm-obs').value.trim() : '';
+          SS.cart.adicionar(p, { variacoes: sel.variacoes, adicionais: sel.adicionais, qty: sel.qty, observacao: sel.observacao });
+          SS.ui.toast(p.nome + ' adicionado ao carrinho!');
+          fechar();
+          if (SS.ui.toggleCart) SS.ui.toggleCart(true);
         });
-        if (faltando.length) {
-          SS.ui.toast('Selecione: ' + faltando.map(function (g) { return g.nome + ' (' + g.min + '-' + g.max + ')'; }).join(', '), 'error');
-          return;
-        }
-        sel.qty = Math.max(p.quantidadeMinima || 1, Number(overlay.querySelector('#pm-qty').value) || 1);
-        sel.observacao = overlay.querySelector('#pm-obs') ? overlay.querySelector('#pm-obs').value.trim() : '';
-        SS.cart.adicionar(p, { variacoes: sel.variacoes, adicionais: sel.adicionais, qty: sel.qty, observacao: sel.observacao });
-        SS.ui.toast(p.nome + ' adicionado ao carrinho!');
-        fechar();
-        if (SS.ui.toggleCart) SS.ui.toggleCart(true);
-      });
+      } else {
+        var encBtn = overlay.querySelector('#pm-encomendar');
+        if (encBtn) encBtn.addEventListener('click', function () {
+          var faltandoEnc = grupos.filter(function (g) {
+            var n = selArray(g, sel).length;
+            if (g.obrigatoria && n < g.min) return true;
+            if (n > g.max) return true;
+            return false;
+          });
+          if (faltandoEnc.length) {
+            SS.ui.toast('Selecione: ' + faltandoEnc.map(function (g) { return g.nome + ' (' + g.min + '-' + g.max + ')'; }).join(', '), 'error');
+            return;
+          }
+          sel.qty = Math.max(p.quantidadeMinima || 1, Number(overlay.querySelector('#pm-qty') ? overlay.querySelector('#pm-qty').value : sel.qty) || 1);
+          sel.observacao = overlay.querySelector('#pm-obs') ? overlay.querySelector('#pm-obs').value.trim() : '';
+          try {
+            sessionStorage.setItem('ss_encomenda_produto', p.id);
+            sessionStorage.setItem('ss_encomenda_selecao', JSON.stringify(sel));
+          } catch (e) {}
+          // Carrinho misto: produto agendado também vai para o carrinho para entrega unificada no dia agendado
+          try {
+            SS.cart.adicionar(p, { variacoes: sel.variacoes, adicionais: sel.adicionais, qty: sel.qty, observacao: sel.observacao });
+            SS.ui.toast(p.nome + ' adicionado à encomenda e ao carrinho — tudo será entregue no dia agendado', '');
+          } catch (e2) {}
+          location.href = 'encomendaagendada.html?produto=' + encodeURIComponent(p.id);
+        });
+      }
     } else {
-      var pr = overlay.querySelector('#pm-preco');
-      if (pr) pr.innerHTML = semPreco ? '<span class="p-now">Valor sob consulta</span>' : '<span class="p-now">' + u.fmtBRL(p.preco) + '</span>';
+      var pr2 = overlay.querySelector('#pm-preco');
+      if (pr2) pr2.innerHTML = semPreco ? '<span class="p-now">Valor sob consulta</span>' : '<span class="p-now">' + u.fmtBRL(p.preco) + '</span>';
     }
 
     requestAnimationFrame(function () {
@@ -334,13 +381,19 @@ window.SS = window.SS || {};
       if (!btn) return;
       if (btn.disabled || btn.classList.contains('is-loading')) return;
       var p = SS.catalog.db.getProduto(btn.getAttribute('data-add'));
-      if (!p || p.esgotado || p.preco === null || p.preco === undefined) return;
+      if (!p || p.esgotado || p.precoSobConsulta || p.preco === null || p.preco === undefined) return;
       if ((p.variacoes || []).length) { abrirModalProduto(p); return; }
       SS.cart.adicionar(p, { qty: 1, variacoes: {}, adicionais: [], observacao: '' });
       SS.ui.toast(p.nome + ' adicionado ao carrinho!');
       if (SS.ui.toggleCart) SS.ui.toggleCart(true);
     });
   }
+
+  // fallback: guarda último produto clicado para agendada (caso query seja perdida)
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a[href*="encomendaagendada.html?produto"]');
+    if (a) { try { var u2 = new URL(a.href, location.origin); var pid = u2.searchParams.get('produto'); if (pid) sessionStorage.setItem('ss_encomenda_produto', pid); } catch (err) {} }
+  });
 
   SS.card = { render: render, initContainer: initContainer, abrirModalProduto: abrirModalProduto };
 })(window.SS);
