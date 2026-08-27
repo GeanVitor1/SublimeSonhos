@@ -93,7 +93,13 @@
 /* RESET / BASE                                                        */
 /* ------------------------------------------------------------------ */
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; overflow-x: hidden; overflow-x: clip; }
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
 body {
   margin: 0;
   font-family: var(--font-body);
@@ -105,6 +111,27 @@ body {
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
   overflow-x: clip;
+  touch-action: manipulation;
+}
+
+/* Previne zoom automático e atraso de clique (300ms) no iOS e Android */
+button,
+label,
+input,
+select,
+textarea,
+.chip,
+.opt,
+.pf-check,
+.pf-cat-check,
+.pf-prod-check,
+.pg-opt,
+.radio-card,
+.entrega-modo-card,
+.custom-select__trigger,
+.custom-select__option,
+.btn {
+  touch-action: manipulation;
 }
 
 /* Textura de papel: pontos radiais fixos, sem interceptar interação */
@@ -721,7 +748,7 @@ html { scroll-behavior: smooth; }
 .modal-overlay--prod .prod-opts .qty button { width: 36px; height: 40px; }
 .modal-overlay--prod .modal__body .form-group { margin-top: 12px; gap: 6px; }
 .modal-overlay--prod .modal__body .form-label { font-size: 13px; }
-.modal-overlay--prod .modal__body #pm-obs { min-height: 56px; padding: 9px 12px; font-size: 13px; }
+.modal-overlay--prod .modal__body #pm-obs { min-height: 56px; padding: 9px 12px; font-size: 16px; }
 .modal-overlay--prod .modal__close {
   position: absolute; top: 12px; right: 12px; z-index: 5;
   width: 40px; height: 40px; border-radius: 50%;
@@ -970,7 +997,7 @@ html { scroll-behavior: smooth; }
 .qty button { width: 36px; height: 36px; display: grid; place-items: center; color: var(--terra-dark); font-size: 16px; font-weight: 800; transition: background 0.18s, color 0.18s; }
 .qty button:hover { background: var(--rose-50); }
 .qty button:active { background: var(--rose-100); }
-.qty input { width: 36px; text-align: center; border: none; font-weight: 800; font-size: 14.5px; background: transparent; -moz-appearance: textfield; }
+.qty input { width: 36px; text-align: center; border: none; font-weight: 800; font-size: 16px; background: transparent; -moz-appearance: textfield; }
 .qty input::-webkit-outer-spin-button, .qty input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
 /* ------------------------------------------------------------------ */
@@ -996,6 +1023,7 @@ html { scroll-behavior: smooth; }
 .form-control {
   width: 100%; padding: 14px 16px; border-radius: var(--r-sm); border: 1.5px solid var(--line);
   background: #fffdf9; transition: border-color 0.15s, box-shadow 0.15s; color: var(--ink);
+  font-size: 16px;
 }
 .form-control:focus { outline: none; border-color: var(--terra); box-shadow: 0 0 0 4px rgba(181, 87, 109, 0.12); }
 textarea.form-control { resize: vertical; min-height: 90px; }
@@ -1868,7 +1896,7 @@ section, .hero, .stats-band, .site-footer, .section--terra {
   .steps-bar { gap: 6px; margin: 12px 0 16px; }
   .steps-bar__item { height: 5px; }
   .form-grid { grid-template-columns: 1fr; gap: 12px; }
-  .form-control { padding: 12px 14px; font-size: 15px; }
+  .form-control { padding: 12px 14px; font-size: 16px; }
   /* bloco do produto agendado */
   .unico-prod-head { flex-direction: row; align-items: flex-start !important; }
   .unico-prod-head img { width: 64px !important; height: 64px !important; }
@@ -1894,7 +1922,7 @@ section, .hero, .stats-band, .site-footer, .section--terra {
   .order-summary-item__price { font-size: 13px; }
   .order-summary-item .qty { height: 36px; }
   .order-summary-item .qty button { width: 32px; height: 36px; }
-  .order-summary-item .qty input { width: 32px; font-size: 13px; }
+  .order-summary-item .qty input { width: 32px; font-size: 16px; }
   .prod-opts__head { flex-direction: column; align-items: flex-start; gap: 4px; }
   .prod-opts__meta { font-size: 11px; line-height: 1.4; }
   .enc-search-wrap { margin-top: 10px; }
@@ -1906,4 +1934,22 @@ section, .hero, .stats-band, .site-footer, .section--terra {
   .panel { padding: 14px 10px; }
   .unico-prod-head img { width: 56px !important; height: 56px !important; }
   .btn--lg { padding: 14px 18px; font-size: 14px; min-height: 46px; }
+}
+
+/* ------------------------------------------------------------------ */
+/* PREVENÇÃO TOTAL DE ZOOM INDESEJADO NO MOBILE (iOS & ANDROID)       */
+/* ------------------------------------------------------------------ */
+@media (max-width: 900px) {
+  input,
+  select,
+  textarea,
+  .form-control,
+  .custom-select__trigger,
+  .dp-input,
+  .qty input,
+  .cat-pos-select,
+  #pm-obs,
+  .bairro-row input {
+    font-size: 16px !important;
+  }
 }
