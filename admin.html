@@ -19,19 +19,39 @@
   <main class="admin-shell">
     <!-- LOGIN -->
     <section id="admin-login">
-      <div class="auth-card">
-        <div class="logo-mark" style="margin:0 auto 16px;width:58px;height:58px" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
-        <h1>Área da loja</h1>
-        <p class="text-muted text-sm text-center mt-1 mb-3">Acesso restrito à proprietária da Sublime Sonhos.</p>
-        <form id="login-form" novalidate>
-          <div class="form-group">
-            <label class="form-label" for="senha">Senha</label>
-            <input class="form-control" id="senha" type="password" autocomplete="current-password">
+      <div class="admin-login-wrap">
+        <div class="admin-login-brand">
+          <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></span>
+          <p class="eyebrow">Sublime Sonhos</p>
+          <h1>Área da loja</h1>
+          <p class="lead" style="font-size:16px;margin-top:12px">Acesso exclusivo da proprietária. Gerencie categorias, produtos e configurações — tudo com o mesmo carinho artesanal da vitrine.</p>
+          <ul class="admin-login-perks">
+            <li><iconify-icon icon="ph:shield-check" width="16" height="16"></iconify-icon> Acesso com senha única</li>
+            <li><iconify-icon icon="ph:eye-slash" width="16" height="16"></iconify-icon> Ocultar categorias da página inicial sem excluir</li>
+            <li><iconify-icon icon="ph:package" width="16" height="16"></iconify-icon> Criar e associar produtos a qualquer categoria</li>
+          </ul>
+          <div class="admin-login-quote">
+            <iconify-icon icon="ph:quotes" width="20" height="20"></iconify-icon>
+            <p>"Doces que nascem de um sonho" — cada alteração aqui reflete na hora na vitrine da loja.</p>
           </div>
-          <button type="submit" class="btn btn--primary btn--block mt-3">Entrar</button>
-          <p class="text-sm text-muted text-center mt-2" id="login-aviso" style="display:none;color:var(--danger);font-weight:700">Senha incorreta. Tente novamente.</p>
-          <p class="form-hint text-center mt-3">Senha provisória do modo demonstração definida no arquivo <code>assets/js/config.js</code> (campo <code>admin.senhaDemo</code>).</p>
-        </form>
+        </div>
+        <div class="auth-card">
+          <h2 style="font-size:22px;text-align:center">Entrar no painel</h2>
+          <p class="text-muted text-sm text-center mt-1 mb-3">Digite sua senha de acesso.</p>
+          <form id="login-form" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="senha">Senha</label>
+              <div class="pw-field">
+                <input class="form-control" id="senha" type="password" autocomplete="current-password" placeholder="••••••••" required>
+                <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Mostrar senha"><iconify-icon icon="ph:eye" width="18" height="18"></iconify-icon></button>
+              </div>
+            </div>
+            <button type="submit" class="btn btn--primary btn--block mt-3" id="btn-entrar">Entrar <iconify-icon icon="ph:arrow-right" width="16" height="16"></iconify-icon></button>
+            <p class="text-sm text-center mt-2" id="login-aviso" style="display:none;color:var(--danger);font-weight:700"><iconify-icon icon="ph:warning-circle" width="14" height="14" style="vertical-align:-2px"></iconify-icon> Senha incorreta. Tente novamente.</p>
+            <p class="form-hint text-center mt-3">Dica: a senha inicial é <code>sublime2026</code> e pode ser alterada em Configurações → Acesso.</p>
+          </form>
+          <p class="text-center mt-3" style="font-size:12px;color:var(--muted)"><a href="index.html" style="font-weight:700;color:var(--terra)">← Voltar para a loja</a></p>
+        </div>
       </div>
     </section>
 
@@ -67,16 +87,7 @@
             <button type="button" class="btn btn--primary btn--sm" id="btn-novo">+ Novo produto</button>
           </div>
         </div>
-        <div class="muted-bg" style="padding:0;overflow:hidden">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Produto</th><th>Categoria</th><th>Preço</th><th>Status</th><th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tabela-produtos"><!-- via JS --></tbody>
-          </table>
-        </div>
+        <div id="tabela-produtos" class="admin-cards"><!-- cards via JS --></div>
       </div>
 
       <!-- TAB CATEGORIAS -->
@@ -85,12 +96,10 @@
           <h2 style="font-size:22px">Categorias</h2>
           <button type="button" class="btn btn--primary btn--sm" id="btn-nova-cat">+ Nova categoria</button>
         </div>
-        <div class="muted-bg" style="padding:0;overflow:hidden">
-          <table class="admin-table">
-            <thead><tr><th>Categoria</th><th>Ícone</th><th>Produtos</th><th>Ações</th></tr></thead>
-            <tbody id="tabela-categorias"></tbody>
-          </table>
+        <div class="admin-banner" style="background:rgba(107,112,72,0.08);color:var(--olive-dark);border:1px solid rgba(107,112,72,0.18);margin-bottom:14px">
+          <iconify-icon icon="ph:eye" width="16" height="16" style="vertical-align:-2px"></iconify-icon> <span><strong>Visibilidade:</strong> categorias ocultas não aparecem na página inicial. Use <em>Ocultar/Mostrar</em> para tirar da vitrine sem excluir. <em>Excluir</em> remove definitivamente (produtos órfãos ficam ocultos até reassociar).</span>
         </div>
+        <div id="tabela-categorias" class="admin-cat-grid"><!-- cards via JS --></div>
       </div>
 
       <!-- TAB CONFIG -->
@@ -135,10 +144,29 @@
           </section>
           <section>
             <h3>Pagamento</h3>
-            <p class="text-sm text-muted mb-2">Formas de pagamento (mesmas para antecipado e na entrega/retirada). Separar por vírgula.</p>
-            <div class="form-group">
-              <label class="form-label" for="cfg-pg-metodos">Métodos de pagamento</label>
-              <input class="form-control" id="cfg-pg-metodos" type="text" placeholder="PIX, Cartão de crédito, Cartão de débito, Dinheiro, Link de pagamento, Outro (combinar com a loja)">
+            <p class="text-sm text-muted mb-2">Toque para ativar/desativar. Mesma lista vale para pagamento antecipado e na entrega.</p>
+            <div class="pg-methods" id="pg-methods">
+              <label class="pg-opt"><input type="checkbox" value="PIX" data-pg><span class="pg-opt__ico"><iconify-icon icon="ph:qr-code" width="18" height="18"></iconify-icon></span><span class="pg-opt__label">PIX</span></label>
+              <label class="pg-opt"><input type="checkbox" value="Cartão de crédito" data-pg><span class="pg-opt__ico"><iconify-icon icon="ph:credit-card" width="18" height="18"></iconify-icon></span><span class="pg-opt__label">Cartão de crédito</span></label>
+              <label class="pg-opt"><input type="checkbox" value="Cartão de débito" data-pg><span class="pg-opt__ico"><iconify-icon icon="ph:credit-card" width="18" height="18"></iconify-icon></span><span class="pg-opt__label">Cartão de débito</span></label>
+              <label class="pg-opt"><input type="checkbox" value="Dinheiro" data-pg><span class="pg-opt__ico"><iconify-icon icon="ph:money" width="18" height="18"></iconify-icon></span><span class="pg-opt__label">Dinheiro</span></label>
+              <label class="pg-opt"><input type="checkbox" value="Link de pagamento" data-pg><span class="pg-opt__ico"><iconify-icon icon="ph:link" width="18" height="18"></iconify-icon></span><span class="pg-opt__label">Link de pagamento</span></label>
+              <label class="pg-opt"><input type="checkbox" value="Outro (combinar com a loja)" data-pg><span class="pg-opt__ico"><iconify-icon icon="ph:chat-circle" width="18" height="18"></iconify-icon></span><span class="pg-opt__label">Outro</span></label>
+            </div>
+            <div class="form-group mt-3"><label class="form-label" for="cfg-pg-outros">Outros (opcional, separados por vírgula)</label><input class="form-control" id="cfg-pg-outros" type="text" placeholder="Ex.: Vale alimentação, Transferência"></div>
+            <input type="hidden" id="cfg-pg-metodos">
+          </section>
+          <section>
+            <h3>Acesso</h3>
+            <p class="text-sm text-muted mb-2">Senha única do painel. Fica salva apenas neste navegador (localStorage).</p>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label" for="cfg-senha-atual">Senha atual</label><input class="form-control" id="cfg-senha-atual" type="password" autocomplete="current-password" placeholder="Senha atual"></div>
+              <div class="form-group"><label class="form-label" for="cfg-senha-nova">Nova senha</label><input class="form-control" id="cfg-senha-nova" type="password" autocomplete="new-password" placeholder="Mín. 6 caracteres"></div>
+              <div class="form-group"><label class="form-label" for="cfg-senha-conf">Confirmar nova senha</label><input class="form-control" id="cfg-senha-conf" type="password" autocomplete="new-password" placeholder="Repita a nova senha"></div>
+            </div>
+            <div class="flex gap-3 items-center mt-2">
+              <button type="button" class="btn btn--outline btn--sm" id="btn-trocar-senha">Alterar senha</button>
+              <span class="text-sm text-muted" id="senha-status"></span>
             </div>
           </section>
           <div class="flex gap-3 items-center">

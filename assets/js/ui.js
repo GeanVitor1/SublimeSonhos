@@ -50,6 +50,7 @@ window.SS = window.SS || {};
         '<div class="header-actions">' +
           '<a class="btn btn--dark btn--sm btn--cta-mobile" href="encomenda.html">Fazer pedido</a>' +
           '<button type="button" class="cart-btn" aria-label="Abrir carrinho" data-open-cart>' + ICON_CART + '<span class="cart-count" aria-hidden="true"></span></button>' +
+          '<a class="btn btn--outline btn--sm" href="admin.html" aria-label="Área da loja" title="Área da loja"><iconify-icon icon="ph:lock" width="14" height="14"></iconify-icon> <span class="hide-sm">Entrar</span></a>' +
           '<button type="button" class="hamburger" aria-label="Abrir menu" data-open-menu>' + ICON_BURGER + '</button>' +
         '</div>' +
       '</div>' +
@@ -71,6 +72,7 @@ window.SS = window.SS || {};
           '<a class="mm-link" href="bolo-personalizado.html">Bolos personalizados</a>' +
           '<a class="mm-link" href="index.html#como-funciona">Como funciona</a>' +
           '<a class="mm-link" href="index.html#contato">Contato</a>' +
+          '<a class="mm-link" href="admin.html"><iconify-icon icon="ph:lock" width="16" height="16"></iconify-icon> Área da loja</a>' +
           '<a class="btn btn--primary btn--block mm-cta" href="encomenda.html">Fazer pedido</a>' +
           '<div class="mobile-menu__foot">' +
             '<a class="btn btn--whatsapp btn--block" href="' + SS.whatsapp.linkContato() + '" target="_blank" rel="noopener">' + ICON_WHATSAPP + ' Pedir pelo WhatsApp</a>' +

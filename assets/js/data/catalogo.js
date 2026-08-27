@@ -23,11 +23,11 @@ window.SS = window.SS || {};
   /* Apenas as 5 pastas reais de produtos. Ordem = ordem das seções.     */
   /* ------------------------------------------------------------------ */
   var CATEGORIAS_BASE = [
-    { id: 'doces', nome: 'Cardápio do Dia', icone: 'cookie', imagem: 'assets/img/produtos/bolo-pote-brigadeiro.webp', descricao: 'Doces prontos para adoçar o dia' },
-    { id: 'copos', nome: 'Copos da Felicidade', icone: 'pint-glass', imagem: 'assets/img/produtos/copo-morango.webp', descricao: 'Copos temáticos cheios de sabor e encantamento' },
-    { id: 'mimos', nome: 'Mimos Doces', icone: 'gift', imagem: 'assets/img/produtos/caixa-fondue.webp', descricao: 'Caixas e presentes para encantar' },
-    { id: 'bolos', nome: 'Bolos', icone: 'cake', imagem: 'assets/img/produtos/bolo-decorado-30cm.webp', descricao: 'Bolos artesanais para cada celebração' },
-    { id: 'morangos', nome: 'Morangos Recheados', icone: 'cherries', imagem: 'assets/img/produtos/morango-do-amor.webp', descricao: 'Morangos doces e apaixonantes' },
+    { id: 'doces', nome: 'Cardápio do Dia', icone: 'cookie', imagem: 'assets/img/produtos/bolo-pote-brigadeiro.webp', descricao: 'Doces prontos para adoçar o dia', ativo: true },
+    { id: 'copos', nome: 'Copos da Felicidade', icone: 'pint-glass', imagem: 'assets/img/produtos/copo-morango.webp', descricao: 'Copos temáticos cheios de sabor e encantamento', ativo: true },
+    { id: 'mimos', nome: 'Mimos Doces', icone: 'gift', imagem: 'assets/img/produtos/caixa-fondue.webp', descricao: 'Caixas e presentes para encantar', ativo: true },
+    { id: 'bolos', nome: 'Bolos', icone: 'cake', imagem: 'assets/img/produtos/bolo-decorado-30cm.webp', descricao: 'Bolos artesanais para cada celebração', ativo: true },
+    { id: 'morangos', nome: 'Morangos Recheados', icone: 'cherries', imagem: 'assets/img/produtos/morango-do-amor.webp', descricao: 'Morangos doces e apaixonantes', ativo: true },
   ];
 
   var IMG = function (slug) { return 'assets/img/produtos/' + slug + '.webp'; };
@@ -605,47 +605,125 @@ window.SS = window.SS || {};
   /* ------------------------------------------------------------------ */
   /* CAMADA DE DADOS                                                     */
   /* ------------------------------------------------------------------ */
-  /* Chave usada pela área administrativa para gravar alterações no       */
-  /* navegador (modo demonstração). NÃO é um banco compartilhado.         */
   var STORAGE_KEY = 'ss_admin_overrides_v1';
+  var SENHA_KEY = 'ss_admin_senha_v1';
 
   function lerOverrides() {
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : { produtos: {}, categorias: null, configuracoes: null };
+      var base = raw ? JSON.parse(raw) : { produtos: {}, categorias: null, configuracoes: null };
+      if (!base.produtos) base.produtos = {};
+      if (!('categorias' in base)) base.categorias = null;
+      if (!('configuracoes' in base)) base.configuracoes = null;
+      return base;
     } catch (e) {
       return { produtos: {}, categorias: null, configuracoes: null };
     }
   }
 
   function salvarOverrides(ov) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ov)); } catch (e) { /* ignore */ }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ov)); } catch (e) {}
+  }
+
+  function getSenhaAtual() {
+    try { return localStorage.getItem(SENHA_KEY) || SS.config.admin.senhaDemo; } catch (e) { return SS.config.admin.senhaDemo; }
+  }
+
+  function setSenhaNova(senha) {
+    try { localStorage.setItem(SENHA_KEY, senha); } catch (e) {}
   }
 
   function aplicarOverride(p, ov) {
     if (!ov) return p;
-    return Object.assign({}, p, ov, { id: p.id });
+    if (ov._excluido) return null;
+    var merged = Object.assign({}, p, ov);
+    merged.id = p.id;
+    delete merged._excluido;
+    return merged;
+  }
+
+  function normalizarCategorias(arr) {
+    return (arr || []).map(function (c) {
+      if (c.ativo === undefined) c.ativo = true;
+      return c;
+    });
   }
 
   function getProdutos() {
     var ov = lerOverrides().produtos || {};
-    return PRODUTOS_BASE
-      .map(function (p) { return aplicarOverride(p, ov[p.id]); })
-      .filter(function (p) { return p.ativo; });
+    var cats = getCategorias();
+    var catIds = {};
+    cats.forEach(function (c) { if (c.ativo !== false) catIds[c.id] = true; });
+    var lista = [];
+    PRODUTOS_BASE.forEach(function (p) {
+      var o = ov[p.id];
+      if (o && o._excluido) return;
+      var m = aplicarOverride(p, o);
+      if (!m || !m.ativo) return;
+      if (m.categoria && !catIds[m.categoria]) return;
+      lista.push(m);
+    });
+    Object.keys(ov).forEach(function (id) {
+      if (PRODUTOS_BASE.some(function (p) { return p.id === id; })) return;
+      var o = ov[id];
+      if (!o || o._excluido || !o.ativo) return;
+      if (o.categoria && !catIds[o.categoria]) return;
+      lista.push(Object.assign({ id: id }, o));
+    });
+    return lista;
   }
 
   function getProduto(id) {
     var ov = lerOverrides().produtos || {};
+    var o = ov[id];
+    if (o && o._excluido) return null;
     var base = PRODUTOS_BASE.filter(function (p) { return p.id === id; })[0];
-    if (!base) return null;
-    var p = aplicarOverride(base, ov[id]);
-    return p.ativo ? p : null;
+    if (base) {
+      var m = aplicarOverride(base, o);
+      if (!m || !m.ativo) return null;
+      var cat = getCategoria(m.categoria);
+      if (cat && cat.ativo === false) return null;
+      return m;
+    }
+    if (o && o.ativo) {
+      var cat2 = getCategoria(o.categoria);
+      if (cat2 && cat2.ativo === false) return null;
+      return Object.assign({ id: id }, o);
+    }
+    return null;
+  }
+
+  function getProdutosTodos() {
+    var ov = lerOverrides().produtos || {};
+    var lista = PRODUTOS_BASE.map(function (p) {
+      var o = ov[p.id];
+      if (o && o._excluido) return null;
+      return aplicarOverride(p, o);
+    }).filter(Boolean);
+    Object.keys(ov).forEach(function (id) {
+      if (PRODUTOS_BASE.some(function (p) { return p.id === id; })) return;
+      var o = ov[id];
+      if (!o || o._excluido) return;
+      lista.push(Object.assign({ id: id }, o));
+    });
+    return lista;
+  }
+
+  function getProdutosPorCategoria(catId) {
+    return getProdutos().filter(function (p) { return p.categoria === catId; });
   }
 
   function getCategorias() {
     var ov = lerOverrides();
-    return ov.categorias && ov.categorias.length ? ov.categorias : CATEGORIAS_BASE;
+    var base = ov.categorias && ov.categorias.length ? ov.categorias : CATEGORIAS_BASE;
+    return normalizarCategorias(base.slice());
   }
+
+  function getCategoriasVisiveis() {
+    return getCategorias().filter(function (c) { return c.ativo !== false; });
+  }
+
+  function getCategoriasTodas() { return getCategorias(); }
 
   function getCategoria(id) {
     return getCategorias().filter(function (c) { return c.id === id; })[0] || null;
@@ -654,6 +732,14 @@ window.SS = window.SS || {};
   function getCategoriaNome(id) {
     var c = getCategoria(id);
     return c ? c.nome : '';
+  }
+
+  function contarProdutosPorCategoria(catId) {
+    var ov = lerOverrides().produtos || {};
+    var todos = getProdutosTodos();
+    var cnt = 0;
+    todos.forEach(function (p) { if (p.categoria === catId && !p._excluido) cnt++; });
+    return cnt;
   }
 
   /* Aplica as configurações salvas no admin sobre o SS.config atual. */
@@ -692,11 +778,19 @@ window.SS = window.SS || {};
     db: {
       getProdutos: getProdutos,
       getProduto: getProduto,
+      getProdutosTodos: getProdutosTodos,
+      getProdutosPorCategoria: getProdutosPorCategoria,
       getCategorias: getCategorias,
+      getCategoriasVisiveis: getCategoriasVisiveis,
+      getCategoriasTodas: getCategoriasTodas,
       getCategoria: getCategoria,
       getCategoriaNome: getCategoriaNome,
+      contarProdutosPorCategoria: contarProdutosPorCategoria,
       aplicarConfiguracoes: aplicarConfiguracoes,
-      /* Usados apenas pela área administrativa (modo demonstração): */
+      getSenhaAtual: getSenhaAtual,
+      setSenhaNova: setSenhaNova,
+      _STORAGE_KEY: STORAGE_KEY,
+      _SENHA_KEY: SENHA_KEY,
       _salvarOverrides: salvarOverrides,
       _lerOverrides: lerOverrides,
       _base: { categorias: CATEGORIAS_BASE, produtos: PRODUTOS_BASE },

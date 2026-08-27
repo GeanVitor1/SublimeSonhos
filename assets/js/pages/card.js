@@ -4,6 +4,8 @@ window.SS = window.SS || {};
 
   var u = SS.utils;
   var FALLBACK_ATTR = u.imgFallbackAttr();
+  function lockScroll(){ var y=window.scrollY||document.documentElement.scrollTop; document.body.dataset.lockY=y; document.body.style.position='fixed'; document.body.style.top='-'+y+'px'; document.body.style.left='0'; document.body.style.right='0'; document.body.style.width='100%'; document.documentElement.style.overflow='hidden'; }
+  function unlockScroll(){ var y=parseInt(document.body.dataset.lockY||'0',10); document.body.style.position=''; document.body.style.top=''; document.body.style.left=''; document.body.style.right=''; document.body.style.width=''; document.documentElement.style.overflow=''; window.scrollTo(0,y); }
 
   function seloDoProduto(p) {
     var selos = [];
@@ -282,7 +284,7 @@ window.SS = window.SS || {};
       '</div>';
 
     document.body.appendChild(overlay);
-    document.body.style.overflow = 'hidden';
+    lockScroll();
 
     function fechar() { fecharModalProduto(); }
     overlay.addEventListener('click', function (e) { if (e.target === overlay) fechar(); });
@@ -331,7 +333,7 @@ window.SS = window.SS || {};
     if (!modalState) return;
     modalState.overlay.classList.remove('open');
     document.removeEventListener('keydown', modalState.onKey);
-    document.body.style.overflow = '';
+    unlockScroll();
     var ov = modalState.overlay;
     setTimeout(function () {
       if (modalState && modalState.overlay === ov) { ov.remove(); modalState = null; }

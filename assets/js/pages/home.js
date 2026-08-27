@@ -73,7 +73,8 @@ window.SS = window.SS || {};
   /* ------------------------------------------------------------------ */
   function categoriasComProdutos() {
     var produtos = SS.catalog.db.getProdutos();
-    return SS.catalog.db.getCategorias().filter(function (c) {
+    var cats = SS.catalog.db.getCategoriasVisiveis ? SS.catalog.db.getCategoriasVisiveis() : SS.catalog.db.getCategorias().filter(function(c){ return c.ativo !== false; });
+    return cats.filter(function (c) {
       return produtos.some(function (p) { return p.categoria === c.id; });
     });
   }
