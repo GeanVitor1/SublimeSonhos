@@ -139,10 +139,10 @@ window.SS = window.SS || {};
         '<div class="panel"><h2><span class="n">5</span> Pagamento e envio</h2><div class="panel__body">' +
           '<p class="form-hint mb-2">Escolha como prefere pagar e revise antes de enviar.</p>' +
           '<div class="opts"><label class="opt' + (dados.momentoPagamento==='antecipado'?' selected':'') + '"><input type="radio" name="momento" value="antecipado"' + (dados.momentoPagamento==='antecipado'?' checked':'') + '><span class="opt__dot"></span><span class="opt__label">Pagamento antecipado</span></label><label class="opt' + (dados.momentoPagamento==='na-entrega'?' selected':'') + '"><input type="radio" name="momento" value="na-entrega"' + (dados.momentoPagamento==='na-entrega'?' checked':'') + '><span class="opt__dot"></span><span class="opt__label">Pagamento na entrega/retirada</span></label></div>' +
-          '<div class="form-group mt-3" id="g-forma"><label class="form-label">Forma de pagamento <span class="req">*</span></label>' + SS.pagamento.renderControles(dados) + '<div class="form-error">Escolha a forma.</div></div>' +
+          '<div class="form-group mt-3' + (dados.momentoPagamento ? '' : ' hidden') + '" id="g-forma"><label class="form-label">Forma de pagamento <span class="req">*</span></label>' + SS.pagamento.renderControles(dados) + '<div class="form-error">Escolha a forma.</div></div>' +
           '<div class="form-group mt-3"><label class="form-label" for="f-obs">Observações gerais</label><textarea class="form-control" id="f-obs" rows="3" placeholder="Algum detalhe importante sobre o bolo ou evento?">' + u.esc(dados.observacoes) + '</textarea></div>' +
-          '<button type="button" class="btn btn--whatsapp btn--lg btn--block mt-3" id="btn-simular-pagamento">Simular pagamento</button>' +
-          '<div class="notice mt-3"><iconify-icon icon="ph:shield-check" width="20" height="20"></iconify-icon><span><strong>Valor sob consulta:</strong> ao simular, a mensagem formatada abre no WhatsApp e a loja responde com o orçamento.</span></div>' +
+          '<button type="button" class="btn btn--whatsapp btn--lg btn--block mt-3" id="btn-simular-pagamento">Confirmar e enviar pedido</button>' +
+          '<div class="notice mt-3"><iconify-icon icon="ph:shield-check" width="20" height="20"></iconify-icon><span><strong>Valor sob consulta:</strong> ao confirmar, a mensagem formatada abre no WhatsApp e a loja responde com o orçamento.</span></div>' +
         '</div></div>';
     }
 
@@ -162,9 +162,9 @@ window.SS = window.SS || {};
     SS.ui.initCustomSelects(el);
 
     var av = document.getElementById('btn-avancar');
-    if (av) av.addEventListener('click', function () { if (validarPasso()) { passo++; render(); window.scrollTo({top:0,behavior:'smooth'}); } });
+    if (av) av.addEventListener('click', function () { if (validarPasso()) { if (passo === 5) { try { SS.pagamento.parar(); } catch(e) {} } passo++; render(); window.scrollTo({top:0,behavior:'smooth'}); } });
     var vo = document.getElementById('btn-voltar');
-    if (vo) vo.addEventListener('click', function () { passo--; render(); window.scrollTo({top:0,behavior:'smooth'}); });
+    if (vo) vo.addEventListener('click', function () { if (passo === 5) { try { SS.pagamento.parar(); } catch(e) {} } passo--; render(); window.scrollTo({top:0,behavior:'smooth'}); });
   }
 
   function initPasso1() {
@@ -199,12 +199,12 @@ window.SS = window.SS || {};
     document.querySelectorAll('input[name="modalidade"]').forEach(function(r){ r.addEventListener('change', function(){ dados.modalidade=r.value; document.querySelectorAll('input[name="modalidade"]').forEach(function(x){ x.closest('.opt').classList.toggle('selected', x.checked); }); document.getElementById('endereco-fields').classList.toggle('hidden', r.value!=='entrega'); renderResumo(); }); });
     var mapa={ 'f-numero':'numero','f-rua':'rua','f-complemento':'complemento','f-bairro':'bairro','f-cidade':'cidade','f-refend':'referencia' };
     Object.keys(mapa).forEach(function(id){ var el=document.getElementById(id); if(!el) return; el.addEventListener('input', function(){ dados.endereco[mapa[id]]=el.value.trim(); }); });
-    var pessoas=document.getElementById('f-pessoas'); // not here
   }
   function initPasso5() {
     SS.pagamento.init(document.getElementById('painel-esquerda'), dados, function(){
-      enviar(); // após simular aprovado
-    }, { onValidarExtra: function(){ return validarPasso(); } });
+      try { SS.pagamento.parar(); } catch(e) {}
+      enviar(); // após confirmar
+    }, { onValidarExtra: function(){ return validarPasso(); }, getValorTotal: function(){ return null; }, origem: 'bolo' });
     var obs=document.getElementById('f-obs'); if(obs) obs.addEventListener('input', function(){ dados.observacoes=obs.value.trim(); });
   }
 
@@ -251,8 +251,13 @@ window.SS = window.SS || {};
     if(!dados.tamanho || !dados.massa || !dados.recheio || !dados.cobertura || !dados.data || !dados.hora || !dados.nome || !dados.telefone ){
       SS.ui.toast('Preencha os campos obrigatórios.', 'error'); passo=1; render(); return;
     }
+    var pixInfo=null;
+    if(dados.pagamento==='PIX' && dados._pixId && SS.pix){
+      var pg=SS.pix.getPagamento(dados._pixId);
+      if(pg) pixInfo={ txid: pg.txid, status: pg.status, valor: pg.valor };
+    }
     var pedido={
-      numero: u.gerarNumeroPedido(),
+      numero: dados._pixPedidoNumero || u.gerarNumeroPedido(),
       tipo: 'Orçamento de bolo personalizado',
       cliente: dados.nome,
       telefone: dados.telefone,
@@ -274,7 +279,10 @@ window.SS = window.SS || {};
       endereco: dados.modalidade==='entrega' ? dados.endereco : null,
       pagamento: dados.pagamento,
       momentoPagamento: dados.momentoPagamento==='antecipado' ? 'Antecipado' : 'Na entrega/retirada',
-      pagamentoSimulado: dados.pagamentoAprovado,
+      pagamentoSimulado: !!dados.pagamentoAprovado,
+      pixTxid: pixInfo?pixInfo.txid:'',
+      pixStatus: pixInfo?pixInfo.status:'',
+      pixValor: pixInfo?pixInfo.valor:null,
       cardMarca: SS.pagamento.cardMarca(dados),
       cardUltimos4: SS.pagamento.cardUltimos4(dados),
       observacoes: dados.observacoes

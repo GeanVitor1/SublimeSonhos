@@ -41,6 +41,8 @@ window.SS = window.SS || {};
 
     if (!itens.length) {
       var ultimaCat = sessionStorage.getItem('ss_last_catalog_hash') || '#destaques';
+      var mCat = String(ultimaCat).match(/^#[a-zA-Z0-9_-]+/);
+      ultimaCat = mCat ? mCat[0] : '#destaques';
       var hrefCat = 'index.html' + (ultimaCat.charAt(0) === '#' ? ultimaCat : '#' + ultimaCat);
       el.innerHTML =
         '<div class="empty-state">' +
@@ -155,24 +157,24 @@ window.SS = window.SS || {};
         (sobConsulta?'<p class="text-sm text-muted mt-2"><iconify-icon icon="ph:warning-circle" width="15" height="15" style="vertical-align:-2px"></iconify-icon> Itens sem preço definido — total será confirmado pela loja.</p>':'') + '</div>';
       html =
         '<div class="panel"><h2><span class="n">4</span> Pagamento</h2><div class="panel__body">' +
-          '<p class="form-hint mb-2">Mesmas formas de pagamento para <strong>antecipado</strong> e <strong>na entrega/retirada</strong>. Ao simular o pagamento, abrimos o WhatsApp com a mensagem formatada do seu pedido.</p>' +
+          '<p class="form-hint mb-2">Mesmas formas de pagamento para <strong>antecipado</strong> e <strong>na entrega/retirada</strong>. Ao confirmar, abrimos o WhatsApp com a mensagem formatada do seu pedido.</p>' +
           '<div class="opts opts--2col">' +
             '<label class="opt' + (dados.momentoPagamento === 'antecipado' ? ' selected' : '') + '"><input type="radio" name="momento" value="antecipado"' + (dados.momentoPagamento === 'antecipado' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Pagamento antecipado</span></label>' +
             '<label class="opt' + (dados.momentoPagamento === 'na-entrega' ? ' selected' : '') + '"><input type="radio" name="momento" value="na-entrega"' + (dados.momentoPagamento === 'na-entrega' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Pagamento na entrega ou retirada</span></label>' +
           '</div>' +
-          '<div class="form-group mt-3" id="g-forma"><label class="form-label" for="pg-metodos">Forma de pagamento <span class="req">*</span></label>' +
+          '<div class="form-group mt-3' + (dados.momentoPagamento ? '' : ' hidden') + '" id="g-forma"><label class="form-label" for="pg-metodos">Forma de pagamento <span class="req">*</span></label>' +
             SS.pagamento.renderControles(dados) +
             '<div class="form-error">Escolha a forma de pagamento.</div>' +
           '</div>' +
           resumoHtml +
           '<div class="form-group mt-3"><label class="form-label" for="f-obs">Observações gerais</label><textarea class="form-control" id="f-obs" rows="2" placeholder="Alguma observação para a loja?">' + u.esc(dados.observacoes) + '</textarea></div>' +
-          '<button type="button" class="btn btn--whatsapp btn--lg btn--block mt-3" id="btn-simular-pagamento">Simular pagamento</button>' +
+          '<button type="button" class="btn btn--whatsapp btn--lg btn--block mt-3" id="btn-simular-pagamento">Confirmar e enviar pedido</button>' +
         '</div></div>';
     } else {
       html = '<div class="panel"><h2><span class="n">5</span> Pedido enviado!</h2><div class="panel__body">' +
         '<div class="pag-confirmado" role="status">' +
           '<iconify-icon icon="ph:check-circle" width="48" height="48"></iconify-icon>' +
-          '<h3>Pagamento simulado e pedido enviado pelo WhatsApp</h3>' +
+          '<h3>Pedido enviado pelo WhatsApp!</h3>' +
           '<p>O WhatsApp foi aberto com a mensagem formatada do seu pedido. Aguarde a confirmação da confeitaria.</p>' +
         '</div>' +
         htmlRevisao(sobConsulta) +
@@ -202,10 +204,12 @@ window.SS = window.SS || {};
       if (validarPasso()) { passo++; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
     });
     var vo = document.getElementById('btn-voltar');
-    if (vo) vo.addEventListener('click', function () { passo--; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    if (vo) vo.addEventListener('click', function () { if (passo === 4) { try { SS.pagamento.parar(); } catch (e) {} } passo--; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
     el.querySelectorAll('[data-continuar]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var h = sessionStorage.getItem('ss_last_catalog_hash') || '#destaques';
+        var mH = String(h).match(/^#[a-zA-Z0-9_-]+/);
+        h = mH ? mH[0] : '#destaques';
         var target = 'index.html' + h;
         // se veio do catálogo, volta exatamente de onde saiu sem recarregar topo
         if (document.referrer && document.referrer.indexOf('index.html') !== -1 && window.history.length > 1) {
@@ -311,19 +315,30 @@ window.SS = window.SS || {};
   }
 
   /* ---------------------- ETAPA 4: PAGAMENTO ------------------------ */
+  var _pixRefreshBound = false;
   function initPassoPagamento() {
-    /* O módulo compartilhado (pagamento.js) renderiza e liga os checkboxes
-       de forma de pagamento (com ícones), a área dinâmica do Pix (QR mockado)
-       e do cartão, o troco e o botão "Simular pagamento". Após a simulação
-       ser aprovada, envia o pedido pelo WhatsApp e avança para a confirmação. */
     SS.pagamento.init(document.getElementById('painel-esquerda'), dados, function () {
       finalizar();
       passo = TOTAIS;
       render();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, {
+      getValorTotal: function(){ return totalEstimado(); },
+      origem: 'carrinho',
+      onValidarExtra: function(){ return validarPasso(); }
     });
+    // se mudar entrega/modalidade, atualiza valor do Pix
     var obs = document.getElementById('f-obs');
     if (obs) obs.addEventListener('input', function () { dados.observacoes = obs.value.trim(); });
+    // escuta mudança de endereço para recalcular Pix (registrado uma única vez)
+    if (!_pixRefreshBound) {
+      _pixRefreshBound = true;
+      document.addEventListener('change', function(e){
+        if (e.target && e.target.id && e.target.id.indexOf('f-') === 0 && passo === 4) {
+          setTimeout(function(){ if (dados._refreshPix) dados._refreshPix(); }, 300);
+        }
+      });
+    }
   }
 
   /* ----------------------- ETAPA 5: REVISÃO ------------------------- */
@@ -347,7 +362,7 @@ window.SS = window.SS || {};
         (end ? '<li>Endereço: ' + u.esc(end) + '</li>' : '') +
       '</ul></div>' +
       '<div class="review-block"><h3>Pagamento</h3><ul>' +
-        '<li>Forma: ' + u.esc(dados.pagamento || '—') + (dados.pagamentoAprovado ? ' (simulado, aprovado)' : '') + '</li>' +
+        '<li>Forma: ' + u.esc(dados.pagamento || '—') + (dados.pagamentoAprovado ? ' (confirmado)' : '') + '</li>' +
         '<li>Momento: ' + (dados.momentoPagamento === 'antecipado' ? 'Antecipado' : dados.momentoPagamento === 'na-entrega' ? 'Na entrega/retirada' : '—') + '</li>' +
         (SS.pagamento.cardUltimos4(dados) ? '<li>Cartão: ' + u.esc(SS.pagamento.cardMarca(dados)) + ' ···· ' + SS.pagamento.cardUltimos4(dados) + '</li>' : '') +
         (dados.momentoPagamento === 'na-entrega' && dados.pagamento === 'Dinheiro' ? '<li>Troco: ' + (dados.troco ? 'para ' + u.fmtBRL(Number(String(dados.trocoPara).replace(',', '.')) || 0) : 'não precisa') + '</li>' : '') +
@@ -403,13 +418,21 @@ window.SS = window.SS || {};
   /* ------------------------- FINALIZAÇÃO ---------------------------- */
   function finalizar() {
     if (!validarPasso()) return;
+    try { SS.pagamento.parar(); } catch (e) {}
+    // preços sempre recalculados do catálogo (cart.js) — à prova de adulteração via console
     var sub = SS.cart.subtotal();
     var ent = valorEntrega();
     var total = totalEstimado();
     var trocoValor = dados.troco ? Number(String(dados.trocoPara).replace(',', '.')) || 0 : 0;
+    // dados Pix para mensagem
+    var pixInfo = null;
+    if (dados.pagamento === 'PIX' && dados._pixId && SS.pix) {
+      var pg = SS.pix.getPagamento(dados._pixId);
+      if (pg) pixInfo = { txid: pg.txid, status: pg.status, payload: pg.payload, valor: pg.valor };
+    }
 
     var pedido = {
-      numero: u.gerarNumeroPedido(),
+      numero: dados._pixPedidoNumero || u.gerarNumeroPedido(),
       tipo: 'Pedido rápido (pronta entrega)',
       cliente: dados.nome,
       telefone: dados.telefone,
@@ -418,7 +441,7 @@ window.SS = window.SS || {};
           nome: item.nome,
           qty: item.qty,
           observacao: item.observacao,
-          unitPrice: item.unitPrice,
+          unitPrice: SS.cart.precoUnitarioItem(item),
           variacoes: item.variacoes,
           adicionais: item.adicionais,
         };
@@ -428,7 +451,10 @@ window.SS = window.SS || {};
       pagamento: dados.pagamento,
       momentoPagamento: dados.momentoPagamento === 'antecipado' ? 'Antecipado' : 'Na entrega/retirada',
       troco: trocoValor,
-      pagamentoSimulado: true,
+      pagamentoSimulado: !!dados.pagamentoAprovado,
+      pixTxid: pixInfo ? pixInfo.txid : '',
+      pixStatus: pixInfo ? pixInfo.status : '',
+      pixValor: pixInfo ? pixInfo.valor : null,
       cardMarca: SS.pagamento.cardMarca(dados),
       cardUltimos4: SS.pagamento.cardUltimos4(dados),
       subtotal: sub,

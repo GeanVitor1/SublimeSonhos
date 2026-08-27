@@ -2,7 +2,7 @@
 
 Site comercial da confeitaria **Sublime Sonhos** (Aurelino Leal / Ubaitaba — BA): catálogo completo, carrinho, pedido rápido, encomenda agendada, bolo personalizado e painel administrativo. Toda a finalização é feita pelo **WhatsApp**.
 
-> **Status:** v1 em modo demonstração. Catálogo e edições do admin ficam salvos **apenas no navegador (localStorage)** para validação do cliente. A migração para um backend real (Supabase) está documentada na seção [Ativação do Supabase](#ativação-do-supabase).
+> **Status:** v1 em operação temporária 100% front-end (hospedado na Vercel). Pedidos via WhatsApp já funcionais; catálogo e configurações do admin ficam salvos no navegador (localStorage) até a ativação do backend. Veja [Ativação do Supabase](#ativação-do-supabase) para migração.
 
 ---
 
@@ -20,7 +20,10 @@ ou abrir `index.html` direto no navegador (a maioria das funções funciona, exc
 
 1. Crie um repositório no GitHub e envie a pasta do projeto (não inclua a pasta `Imagens/` original nem os blocos de notas — não são usados pelo site).
 2. Na Vercel: **Add New Project → Import** o repositório. Framework: *Other*. Build: nenhum. Publish directory: raiz (padrão).
-3. Pronto. O `vercel.json` já configura as rotas amigáveis (`/produto/:slug`, `/encomenda`, `/bolo-personalizado`, `/carrinho`, `/admin`).
+3. **Defina a variável de ambiente `ADMIN_PASSWORD`** (a senha de acesso ao painel) em *Settings → Environment Variables*. Sem ela, o login do `/admin` não funciona (a senha nunca fica no código).
+4. Faça o deploy. O `vercel.json` já configura as rotas amigáveis (`/produto/:slug`, `/encomenda`, `/bolo-personalizado`, `/carrinho`, `/admin`) e a função `/api/login`.
+
+> Para rodar o login do painel localmente, use `vercel dev` (que também carrega as env vars), pois o `npx serve` não executa a função `/api/login`.
 
 O `sitemap.xml`, `robots.txt` e as tags de SEO assumem o domínio `https://sublimesonhos.vercel.app/`. Se usar outro domínio, ajuste:
 - `sitemap.xml` (URLs)
@@ -40,20 +43,19 @@ Tudo fica centralizado em **`assets/js/config.js`**:
 | Entrega | `loja.entrega` | Taxa "a confirmar" (modo `confirmar`) |
 | Pagamentos | `loja.pagamento` | PIX, Dinheiro, Cartão |
 | Antecedência de encomenda | `loja.antecedenciaMinimaDias` | 2 dias |
-| Senha demo do admin | `admin.senhaDemo` | `sublime2026` |
 
-> A senha do admin é **somente demonstrativa** e fica visível no código-fonte. Para produção com segurança real, use a [ativação do Supabase](#ativação-do-supabase).
+> **Autenticação do admin:** a senha fica no servidor (variável `ADMIN_PASSWORD` na Vercel) e a comparação é feita em `api/login.js` com timing-safe e limite de tentativas por IP — sem hash no front-end. Para proteger também os dados (sincronizar entre dispositivos), use a [ativação do Supabase](#ativação-do-supabase).
 
-## Painel administrativo (modo demo)
+## Painel administrativo
 
-Acesse `/admin` e entre com a senha demo `sublime2026`.
+Acesse `/admin` e entre com a senha definida na variável `ADMIN_PASSWORD`.
 
 - **Produtos:** editar preço, descrição, disponibilidade (pronta entrega / encomenda), adicionais e criar novos. Fotos de novos produtos ficam salvas em base64 no navegador (não servem para produção).
 - **Categorias:** renomear e criar.
 - **Configurações:** horário, WhatsApp, Instagram, taxas de entrega, etc. (as que estão no painel têm prioridade sobre o `config.js`).
 - **Exportar catálogo:** gera um JSON pronto para ser importado no backend quando houver.
 
-**Como funciona (importante):** as alterações são gravadas em `localStorage` (`ss_admin_overrides_v1`) **no navegador onde foram feitas**. Elas valem apenas para a validação com o cliente nessa mesma máquina/navegador. Não são compartilhadas entre dispositivos e somem se o navegador for limpo. Por isso o backup: use o botão **Exportar catálogo** e guarde o JSON — ele pode ser importado no Supabase depois.
+**Como funciona:** as alterações são gravadas em `localStorage` (`ss_admin_overrides_v1`) **neste navegador** e refletem imediatamente na vitrine para todos que acessarem a partir deste navegador. Para sincronizar entre dispositivos, é necessária a ativação do backend. Use o botão **Exportar catálogo** para backup — o JSON pode ser importado no Supabase depois.
 
 ## Estrutura do projeto
 
@@ -63,22 +65,23 @@ index.html              Página inicial (catálogo completo por categoria, sobre
 carrinho.html           Pedido rápido em 5 etapas → WhatsApp
 encomenda.html          Encomenda agendada em 5 etapas → WhatsApp
 bolo-personalizado.html Orçamento de bolo personalizado → WhatsApp
-admin.html              Painel administrativo demo
-404.html, robots.txt, sitemap.xml, vercel.json
+admin.html              Painel administrativo
+ 404.html, robots.txt, sitemap.xml, vercel.json
 assets/js/config.js     Configurações da loja (ver acima)
 assets/js/utils.js      Formatação de moeda/data, máscaras, helpers
-assets/js/data/catalogo.js  42 produtos + 4 categorias (fonte de dados) + camada de overrides
+assets/js/data/catalogo.js  49 produtos + 5 categorias (fonte de dados) + camada de overrides
 assets/js/cart.js       Carrinho (localStorage ss_cart_v1)
 assets/js/whatsapp.js   Montagem das mensagens e links do WhatsApp
 assets/js/ui.js         Header/footer, menu, drawer do carrinho, toasts
 assets/js/pages/*.js    Lógica de cada página
+api/login.js            Autenticação do admin (Vercel Serverless — senha em env var)
 assets/img/produtos/    Fotos otimizadas (webp + jpg)
 assets/img/site/        Favicon, OG image, heróis
 ```
 
 ## Como editar o catálogo base (sem o admin)
 
-Os 42 produtos e 4 categorias ficam em `assets/js/data/catalogo.js`. Para alterar algo de forma definitiva, edite esse arquivo (preços, textos, disponibilidade) — ele é o "banco de dados" estático. As mudanças feitas pelo admin têm prioridade apenas no navegador onde foram feitas.
+Os 49 produtos e 5 categorias ficam em `assets/js/data/catalogo.js`. Para alterar algo de forma definitiva, edite esse arquivo (preços, textos, disponibilidade) — ele é o "banco de dados" estático. As mudanças feitas pelo admin têm prioridade apenas no navegador onde foram feitas.
 
 ## Ativação do Supabase
 
@@ -89,19 +92,19 @@ Passos sugeridos:
 1. **Tabela `categorias`:** `id` (uuid pk), `nome`, `icone`, `ordem`.
 2. **Tabela `produtos`:** `id` (uuid pk), `slug` (unique), `nome`, `categoria_id` (fk), `descricao`, `preco` (numeric, null = sob consulta), `unidade`, `disponibilidade` ('pronta', 'encomenda', 'ambos'), `prazo_producao_dias`, `destaque` (bool), `ativo` (bool), `ordem`, `imagens` (text[] de URLs do Supabase Storage), `adicionais` (jsonb), `variacoes` (jsonb).
 3. **Tabela `configuracoes`:** chave/valor (horário, WhatsApp, Instagram, taxas de entrega, formas de pagamento).
-4. **Auth:** habilitar e-mail/senha. No `config.js`, substituir `admin.senhaDemo` por autenticação real (ex.: `supabase.auth.signInWithPassword`) e proteção das rotas de escrita via RLS.
+4. **Auth:** habilitar e-mail/senha. Substituir a autenticação serverless (`api/login.js`) por `supabase.auth.signInWithPassword` e proteger as rotas de escrita via RLS.
 5. **Storage:** bucket `produtos` (público) para as fotos enviadas pelo admin — substituir o armazenamento em base64 por upload.
 6. Substituir as funções de `SS.catalog.db` por chamadas `fetch` ao Supabase (REST/PostgREST) mantendo as mesmas assinaturas. O admin passa a gravar no banco, e qualquer dispositivo enxerga as alterações.
 7. **Pedidos (opcional):** criar tabela `pedidos` (jsonb completo da mensagem) e salvar antes de abrir o WhatsApp, para registro das vendas.
 
 ## Limitações e pendências da v1
 
-- **Bolos e itens sem preço:** 16 produtos (bolos, kits e cupcakes) exibem "Preço sob consulta" — os valores originais não existiam nos arquivos fornecidos. Edite pelo admin ou no `catalogo.js`.
+- **Bolos e itens sem preço:** 17 produtos (bolos, kits e cupcakes) exibem "Preço sob consulta" — os valores originais não existiam nos arquivos fornecidos. Edite pelo admin ou no `catalogo.js`.
 - **Descrições:** algumas foram escritas de forma provisória e devem ser revisadas com a proprietária.
-- **Depoimentos:** os da home são demonstrativos (marcados no código) — substituir por reais.
-- **Endereço e taxa de entrega:** não informados; o site pergunta o endereço no pedido e a taxa fica "a confirmar". Quando definidos, mude `loja.entrega` no `config.js` (modo `fixa` com valor ou `bairro` com taxas).
-- **Admin é demo** (dados só no navegador, senha visível no código) — veja a seção acima.
-- **Sem pagamento online:** a loja confirma cada pedido e envia as instruções de pagamento pelo WhatsApp.
+- **Depoimentos:** os da home são de clientes reais — mantenha atualizados.
+- **Endereço e taxa de entrega:** o site pergunta o endereço no pedido e a taxa fica "a confirmar" até a loja definir; quando definidos, mude `loja.entrega` no `config.js` (modo `fixa` com valor ou `bairro` com taxas).
+- **Admin local:** a senha é verificada no servidor (sem brute-force), mas os dados do painel ainda ficam neste navegador; para sincronizar entre dispositivos e proteger as alterações, migre para backend conforme seção acima.
+- **Pagamento:** a loja confirma cada pedido e envia as instruções de pagamento pelo WhatsApp; Pix gera QR Code BR Code válido quando a chave está configurada.
 
 ## Testes
 

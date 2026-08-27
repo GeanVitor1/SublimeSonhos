@@ -42,7 +42,7 @@ window.SS = window.SS || {};
     var lines = [];
     lines.push('Olá! Gostaria de solicitar o seguinte pedido:');
     lines.push('');
-    lines.push('PEDIDO: #' + o.numero);
+    lines.push('PEDIDO: #' + (o.numero || 'sem número'));
     lines.push('SOLICITADO: ' + now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
     lines.push('TIPO: ' + o.tipo);
     lines.push('CLIENTE: ' + (o.cliente || '—'));
@@ -71,7 +71,20 @@ window.SS = window.SS || {};
     lines.push('PAGAMENTO');
     lines.push('Forma: ' + (o.pagamento || '—'));
     lines.push('Momento: ' + (o.momentoPagamento || '—'));
-    if (o.pagamentoSimulado) lines.push('Situação: pagamento simulado e aprovado');
+    if (o.pixTxid) {
+      lines.push('Pix TXID: ' + o.pixTxid);
+      if (o.pixValor !== null && o.pixValor !== undefined) lines.push('Pix valor: ' + u.fmtBRL(o.pixValor));
+      if (o.pixStatus) {
+        var pixLabel = { 'pago':'Pix PAGO (confirmado)', 'aguardando_confirmacao':'Pix informado — aguardando confirmação da loja', 'pendente':'Pix pendente', 'expirado':'Pix expirado' };
+        lines.push('Pix status: ' + (pixLabel[o.pixStatus] || o.pixStatus));
+      }
+    }
+    if (o.pagamentoSimulado) {
+      if (o.pagamento === 'PIX' && o.pixStatus === 'pago') lines.push('Situação: Pix pago e confirmado');
+      else if (o.pagamento === 'PIX' && o.pixStatus === 'aguardando_confirmacao') lines.push('Situação: Cliente informou pagamento Pix — aguardando confirmação da loja');
+      else if (o.pagamento === 'PIX') lines.push('Situação: Pix gerado — aguardando pagamento');
+      else lines.push('Situação: pagamento confirmado — aguardando validação da loja');
+    }
     if (o.cardUltimos4) lines.push('Cartão: ' + u.esc(o.cardMarca) + ' ···· ' + o.cardUltimos4);
     if (o.troco) lines.push('Troco: precisa de troco para ' + u.fmtBRL(o.troco));
     else if (o.pagamento === 'Dinheiro') lines.push('Troco: não precisa');
@@ -127,7 +140,18 @@ window.SS = window.SS || {};
     lines.push('PAGAMENTO');
     lines.push('Forma: ' + (o.pagamento || '—'));
     lines.push('Momento: ' + (o.momentoPagamento || '—'));
-    if (o.pagamentoSimulado) lines.push('Situação: pagamento simulado e aprovado');
+    if (o.pixTxid) {
+      lines.push('Pix TXID: ' + o.pixTxid);
+      if (o.pixStatus) {
+        var pixLabelB = { 'pago':'Pix PAGO (confirmado)', 'aguardando_confirmacao':'Pix informado — aguardando confirmação da loja', 'pendente':'Pix pendente' };
+        lines.push('Pix status: ' + (pixLabelB[o.pixStatus] || o.pixStatus));
+      }
+    }
+    if (o.pagamentoSimulado) {
+      if (o.pagamento === 'PIX' && o.pixStatus === 'pago') lines.push('Situação: Pix pago e confirmado');
+      else if (o.pagamento === 'PIX' && o.pixStatus) lines.push('Situação: Pix ' + o.pixStatus);
+      else lines.push('Situação: pagamento confirmado — aguardando validação da loja');
+    }
     if (o.cardUltimos4) lines.push('Cartão: ' + u.esc(o.cardMarca) + ' ···· ' + o.cardUltimos4);
 
     lines.push('');

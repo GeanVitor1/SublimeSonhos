@@ -40,7 +40,7 @@ window.SS = window.SS || {};
     var total = precoAtual();
     var temPromo = produto.precoPromo && produto.precoPromo < produto.preco;
     var ok = grupos.every(function (g) { var n = selArray(g).length; return n >= g.min && n <= g.max && (!g.obrigatoria || n > 0); });
-    var inicio = grupos.some(function (g) { return g.opcoes.some(function (o) { return o.acrescimo; }); }) && !ok;
+    var inicio = grupos.some(function (g) { return (g.opcoes || []).some(function (o) { return o.acrescimo; }); }) && !ok;
     el.innerHTML =
       (inicio ? '<span class="p-start">A partir de</span>' : '') +
       '<span class="p-now">' + u.fmtBRL(temPromo ? produto.precoPromo + extras : total) + '</span>' +

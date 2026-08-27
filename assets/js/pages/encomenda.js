@@ -40,7 +40,7 @@ window.SS = window.SS || {};
     (p.variacoes || []).forEach(function (v) {
       var min = v.min !== undefined && v.min !== null ? v.min : (v.obrigatoria ? 1 : 0);
       var max = v.max !== undefined && v.max !== null ? v.max : 1;
-      grupos.push({ id: v.id || ('var_' + grupos.length), nome: v.nome, min: min, max: max, obrigatoria: !!(v.obrigatoria || min > 0), opcoes: v.opcoes });
+      grupos.push({ id: v.id || ('var_' + grupos.length), nome: v.nome, min: min, max: max, obrigatoria: !!(v.obrigatoria || min > 0), opcoes: v.opcoes || [] });
     });
     if (p.sabores && p.sabores.length) grupos.push({ id: 'sabor', nome: 'Sabor do bolo', min: 1, max: 1, obrigatoria: true, opcoes: p.sabores.map(function (s) { return typeof s === 'object' ? s : { nome: s }; }) });
     if (p.tamanhos && p.tamanhos.length) grupos.push({ id: 'tamanho', nome: 'Tamanho', min: 1, max: 1, obrigatoria: true, opcoes: p.tamanhos.map(function (s) { return typeof s === 'object' ? s : { nome: s }; }) });
@@ -285,6 +285,10 @@ window.SS = window.SS || {};
       } else if (passo === 2) {
         html =
           '<div class="panel"><h2><span class="n">2</span> Retirada ou entrega</h2><div class="panel__body">' +
+            '<div class="form-grid" style="margin-bottom:18px">' +
+              '<div class="form-group" id="g-nome"><label class="form-label" for="f-nome">Nome completo <span class="req">*</span></label><input class="form-control" id="f-nome" type="text" value="' + u.esc(dados.cliente) + '" autocomplete="name"><div class="form-error">Informe seu nome.</div></div>' +
+              '<div class="form-group" id="g-telefone"><label class="form-label" for="f-telefone">WhatsApp <span class="req">*</span></label><input class="form-control" id="f-telefone" type="tel" inputmode="tel" placeholder="(73) 90000-0000" value="' + u.esc(dados.telefone) + '" autocomplete="tel"><div class="form-error">Informe um telefone válido com DDD.</div></div>' +
+            '</div>' +
             '<div class="opts opts--2col">' +
               '<label class="opt' + (dados.modalidade === 'retirada' ? ' selected' : '') + '"><input type="radio" name="modalidade" value="retirada"' + (dados.modalidade === 'retirada' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Retirada no local</span></label>' +
               '<label class="opt' + (dados.modalidade === 'entrega' ? ' selected' : '') + '"><input type="radio" name="modalidade" value="entrega"' + (dados.modalidade === 'entrega' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Entrega em domicílio</span></label>' +
@@ -311,19 +315,19 @@ window.SS = window.SS || {};
               '<label class="opt' + (dados.momentoPagamento === 'antecipado' ? ' selected' : '') + '"><input type="radio" name="momento" value="antecipado"' + (dados.momentoPagamento === 'antecipado' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Pagamento antecipado</span></label>' +
               '<label class="opt' + (dados.momentoPagamento === 'na-entrega' ? ' selected' : '') + '"><input type="radio" name="momento" value="na-entrega"' + (dados.momentoPagamento === 'na-entrega' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Pagamento na entrega ou retirada</span></label>' +
             '</div>' +
-            '<div class="form-group mt-3" id="g-forma"><label class="form-label" for="pg-metodos">Forma de pagamento <span class="req">*</span></label>' +
+            '<div class="form-group mt-3' + (dados.momentoPagamento ? '' : ' hidden') + '" id="g-forma"><label class="form-label" for="pg-metodos">Forma de pagamento <span class="req">*</span></label>' +
               SS.pagamento.renderControles(dados) +
               '<div class="form-error">Escolha a forma de pagamento.</div>' +
             '</div>' +
             resumoEnc3 +
             '<div class="form-group mt-3"><label class="form-label" for="f-obs">Observações gerais</label><textarea class="form-control" id="f-obs" rows="2" placeholder="Tema, cores, referências, detalhes da festa…">' + u.esc(dados.observacoes) + '</textarea></div>' +
-            '<button type="button" class="btn btn--whatsapp btn--lg btn--block mt-3" id="btn-simular-pagamento">Simular pagamento</button>' +
+            '<button type="button" class="btn btn--whatsapp btn--lg btn--block mt-3" id="btn-simular-pagamento">Confirmar e enviar encomenda</button>' +
           '</div></div>';
       } else {
         html = '<div class="panel"><h2><span class="n">4</span> Encomenda enviada!</h2><div class="panel__body">' +
           '<div class="pag-confirmado" role="status">' +
             '<iconify-icon icon="ph:check-circle" width="48" height="48"></iconify-icon>' +
-            '<h3>Pagamento simulado e encomenda enviada pelo WhatsApp</h3>' +
+            '<h3>Encomenda enviada pelo WhatsApp!</h3>' +
             '<p>O WhatsApp foi aberto com a mensagem formatada da sua encomenda. Aguarde a confirmação da confeitaria.</p>' +
           '</div>' +
           htmlRevisao() +
@@ -353,7 +357,7 @@ window.SS = window.SS || {};
         html =
           '<div class="panel"><h2><span class="n">2</span> Escolha os produtos</h2><div class="panel__body">' +
             '<p class="form-hint mb-3">Selecione os produtos da encomenda e informe a quantidade. Produtos "sob consulta" também podem ser encomendados — o valor será confirmado pela loja.</p>' +
-            '<div class="opts" id="enc-cats" style="grid-auto-flow:column;overflow-x:auto;padding-bottom:6px">' +
+            '<div class="enc-cats" id="enc-cats">' +
               '<label class="opt"><input type="radio" name="enc-cat" value="todos" checked><span class="opt__dot"></span><span class="opt__label">Todos</span></label>' +
               cats.map(function (c) { return '<label class="opt"><input type="radio" name="enc-cat" value="' + u.esc(c.id) + '"><span class="opt__dot"></span><span class="opt__label"><iconify-icon icon="ph:' + (c.icone || 'cookie') + '" width="16" height="16"></iconify-icon> ' + u.esc(c.nome) + '</span></label>'; }).join('') +
             '</div>' +
@@ -367,6 +371,10 @@ window.SS = window.SS || {};
       } else if (passo === 3) {
         html =
           '<div class="panel"><h2><span class="n">3</span> Retirada ou entrega</h2><div class="panel__body">' +
+            '<div class="form-grid" style="margin-bottom:18px">' +
+              '<div class="form-group" id="g-nome"><label class="form-label" for="f-nome">Nome completo <span class="req">*</span></label><input class="form-control" id="f-nome" type="text" value="' + u.esc(dados.cliente) + '" autocomplete="name"><div class="form-error">Informe seu nome.</div></div>' +
+              '<div class="form-group" id="g-telefone"><label class="form-label" for="f-telefone">WhatsApp <span class="req">*</span></label><input class="form-control" id="f-telefone" type="tel" inputmode="tel" placeholder="(73) 90000-0000" value="' + u.esc(dados.telefone) + '" autocomplete="tel"><div class="form-error">Informe um telefone válido com DDD.</div></div>' +
+            '</div>' +
             '<div class="opts opts--2col">' +
               '<label class="opt' + (dados.modalidade === 'retirada' ? ' selected' : '') + '"><input type="radio" name="modalidade" value="retirada"' + (dados.modalidade === 'retirada' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Retirada no local</span></label>' +
               '<label class="opt' + (dados.modalidade === 'entrega' ? ' selected' : '') + '"><input type="radio" name="modalidade" value="entrega"' + (dados.modalidade === 'entrega' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Entrega em domicílio</span></label>' +
@@ -393,19 +401,19 @@ window.SS = window.SS || {};
               '<label class="opt' + (dados.momentoPagamento === 'antecipado' ? ' selected' : '') + '"><input type="radio" name="momento" value="antecipado"' + (dados.momentoPagamento === 'antecipado' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Pagamento antecipado</span></label>' +
               '<label class="opt' + (dados.momentoPagamento === 'na-entrega' ? ' selected' : '') + '"><input type="radio" name="momento" value="na-entrega"' + (dados.momentoPagamento === 'na-entrega' ? ' checked' : '') + '><span class="opt__dot"></span><span class="opt__label">Pagamento na entrega ou retirada</span></label>' +
             '</div>' +
-            '<div class="form-group mt-3" id="g-forma"><label class="form-label" for="pg-metodos">Forma de pagamento <span class="req">*</span></label>' +
+            '<div class="form-group mt-3' + (dados.momentoPagamento ? '' : ' hidden') + '" id="g-forma"><label class="form-label" for="pg-metodos">Forma de pagamento <span class="req">*</span></label>' +
               SS.pagamento.renderControles(dados) +
               '<div class="form-error">Escolha a forma de pagamento.</div>' +
             '</div>' +
             resumoEnc4 +
             '<div class="form-group mt-3"><label class="form-label" for="f-obs">Observações gerais</label><textarea class="form-control" id="f-obs" rows="2" placeholder="Tema, cores, referências, detalhes da festa…">' + u.esc(dados.observacoes) + '</textarea></div>' +
-            '<button type="button" class="btn btn--whatsapp btn--lg btn--block mt-3" id="btn-simular-pagamento">Simular pagamento</button>' +
+            '<button type="button" class="btn btn--whatsapp btn--lg btn--block mt-3" id="btn-simular-pagamento">Confirmar e enviar encomenda</button>' +
           '</div></div>';
       } else {
         html = '<div class="panel"><h2><span class="n">5</span> Encomenda enviada!</h2><div class="panel__body">' +
           '<div class="pag-confirmado" role="status">' +
             '<iconify-icon icon="ph:check-circle" width="48" height="48"></iconify-icon>' +
-            '<h3>Pagamento simulado e encomenda enviada pelo WhatsApp</h3>' +
+            '<h3>Encomenda enviada pelo WhatsApp!</h3>' +
             '<p>O WhatsApp foi aberto com a mensagem formatada da sua encomenda. Aguarde a confirmação da confeitaria.</p>' +
           '</div>' +
           htmlRevisao() +
@@ -425,12 +433,12 @@ window.SS = window.SS || {};
 
     if (unico) {
       if (passo === 1) { initPassoData(); initOpcoesUnico(); initUnicoExtras(); }
-      else if (passo === 2) initPassoEntrega();
+      else if (passo === 2) { initPassoCliente(); initPassoEntrega(); }
       else if (passo === 3) initPassoPagamento();
     } else {
       if (passo === 1) initPassoData();
       if (passo === 2) initPassoProdutos();
-      if (passo === 3) initPassoEntrega();
+      if (passo === 3) { initPassoCliente(); initPassoEntrega(); }
       if (passo === 4) initPassoPagamento();
     }
 
@@ -438,12 +446,14 @@ window.SS = window.SS || {};
     SS.ui.initCustomSelects(el);
 
     var av = document.getElementById('btn-avancar');
-    if (av) av.addEventListener('click', function () { if (validarPasso()) { passo++; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
+    if (av) av.addEventListener('click', function () { if (validarPasso()) { if (passo === (unico ? 3 : 4)) { try { SS.pagamento.parar(); } catch (e) {} } passo++; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
     var vo = document.getElementById('btn-voltar');
-    if (vo) vo.addEventListener('click', function () { passo--; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    if (vo) vo.addEventListener('click', function () { if (passo === (unico ? 3 : 4)) { try { SS.pagamento.parar(); } catch (e) {} } passo--; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
     el.querySelectorAll('[data-continuar]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var h = sessionStorage.getItem('ss_last_catalog_hash') || '#destaques';
+        var mH = String(h).match(/^#[a-zA-Z0-9_-]+/);
+        h = mH ? mH[0] : '#destaques';
         var target = 'index.html' + h;
         if (document.referrer && document.referrer.indexOf('index.html') !== -1 && window.history.length > 1) history.back();
         else location.href = target;
@@ -821,7 +831,7 @@ window.SS = window.SS || {};
     (p.variacoes || []).forEach(function (v) {
       var min = v.min !== undefined && v.min !== null ? v.min : (v.obrigatoria ? 1 : 0);
       var max = v.max !== undefined && v.max !== null ? v.max : 1;
-      grupos.push({ id: v.id || ('var_' + grupos.length), nome: v.nome, min: min, max: max, obrigatoria: !!(v.obrigatoria || min > 0), opcoes: v.opcoes });
+      grupos.push({ id: v.id || ('var_' + grupos.length), nome: v.nome, min: min, max: max, obrigatoria: !!(v.obrigatoria || min > 0), opcoes: v.opcoes || [] });
     });
     if (p.sabores && p.sabores.length) grupos.push({ id: 'sabor', nome: 'Sabor do bolo', min: 1, max: 1, obrigatoria: true, opcoes: p.sabores.map(function (s) { return typeof s === 'object' ? s : { nome: s }; }) });
     if (p.tamanhos && p.tamanhos.length) grupos.push({ id: 'tamanho', nome: 'Tamanho', min: 1, max: 1, obrigatoria: true, opcoes: p.tamanhos.map(function (s) { return typeof s === 'object' ? s : { nome: s }; }) });
@@ -911,7 +921,7 @@ window.SS = window.SS || {};
       var base = p.preco === null || p.preco === undefined ? 0 : p.preco;
       var total = Math.round((base + extras) * 100) / 100;
       var temPromo = p.precoPromo && p.precoPromo < p.preco;
-      var temAcrescimo = (p.variacoes || []).some(function (v) { return v.opcoes.some(function (o) { return o.acrescimo; }); });
+      var temAcrescimo = (p.variacoes || []).some(function (v) { return (v.opcoes || []).some(function (o) { return o.acrescimo; }); });
       var todosOk = grupos.every(function (g) { var n = selArrayEnc(g, sel).length; return n >= (g.min || 0) && (g.max ? n <= g.max : true) && (!g.obrigatoria || n > 0); });
       var inicio = temAcrescimo && !todosOk;
       if (p.preco === null || p.preco === undefined) {
@@ -1070,79 +1080,88 @@ window.SS = window.SS || {};
     encModalState = { overlay: overlay, onKey: onKey };
   }
 
-  function initPassoProdutos() {
-    var catSel = 'todos';
-    var buscaTermo = '';
-    function getFiltrados() {
-      var todos = SS.catalog.db.getProdutos();
-      return todos.filter(function (p) {
-        var okCat = catSel === 'todos' || p.categoria === catSel;
-        if (!okCat) return false;
-        if (!buscaTermo) return true;
-        var t = buscaTermo.toLowerCase();
-        return (p.nome && p.nome.toLowerCase().indexOf(t) !== -1) || (p.descricaoCurta && p.descricaoCurta.toLowerCase().indexOf(t) !== -1) || (p.descricao && p.descricao.toLowerCase().indexOf(t) !== -1);
-      });
-    }
-    function renderMini() {
-      var grid = document.getElementById('enc-mini-cat');
-      if (!grid) return;
-      var produtos = getFiltrados();
-      if (!produtos.length) {
-        grid.innerHTML = '<p class="text-muted text-sm" style="grid-column:1/-1;text-align:center;padding:18px">' + (buscaTermo ? 'Nenhum produto encontrado para "' + u.esc(buscaTermo) + '".' : 'Nenhum produto nesta categoria.') + '</p>';
-        return;
-      }
-      grid.innerHTML = produtos.map(function (p) {
-        var ja = itens.filter(function (i) { return i.id === p.id; })[0];
-        var precoTxt = (p.preco === null || p.preco === undefined ? 'Sob consulta' : u.fmtBRL(p.preco));
-        return (
-          '<div class="mini-prod" data-prod="' + u.esc(p.id) + '">' +
-            (p.imagens && p.imagens[0] ? '<img src="' + u.esc(p.imagens[0]) + '" alt="' + u.esc(p.nome) + '" loading="lazy">' : '<span class="mini-prod__fallback" aria-hidden="true"><iconify-icon icon="ph:cake" width="22" height="22"></iconify-icon></span>') +
-            '<div class="mini-prod__body">' +
-              '<div class="mini-prod__name">' + u.esc(p.nome) + '</div>' +
-              '<div class="mini-prod__price">' + precoTxt + '</div>' +
-              (ja ? '<div class="text-sm" style="color:var(--success);font-weight:700">' + ja.qty + 'x na lista</div>' : '') +
-            '</div>' +
-            '<button type="button" class="mini-prod__add" aria-label="Adicionar ' + u.esc(p.nome) + '">+</button>' +
-          '</div>'
-        );
-      }).join('');
-      grid.querySelectorAll('[data-prod]').forEach(function (card) {
-        card.addEventListener('click', function (e) {
-          if (e.target.closest('button')) return;
-          var id = card.getAttribute('data-prod');
-          var p = obterProduto(id);
-          if (!p) return;
-          abrirModalEncomenda(p);
-        });
-      });
-      grid.querySelectorAll('.mini-prod__add').forEach(function (b) {
-        b.addEventListener('click', function (e) {
-          e.stopPropagation();
-          var id = b.closest('.mini-prod').getAttribute('data-prod');
-          var p = obterProduto(id);
-          if (!p) return;
-          var qtd = Math.max(1, p.quantidadeMinima || 1);
-          adicionarItem(p.id, qtd, '', {}, []);
-          SS.ui.toast(p.nome + ' adicionado à encomenda!');
-        });
-      });
-    }
+  /* estado da etapa de produtos (escopo de módulo p/ refresh sem re-bind) */
+  var _encCatSel = 'todos';
+  var _encBuscaTermo = '';
+  var _encInited = false;
 
-    document.querySelectorAll('input[name="enc-cat"]').forEach(function (r) {
-      r.addEventListener('change', function () {
-        catSel = r.value;
-        document.querySelectorAll('input[name="enc-cat"]').forEach(function (x) { x.closest('.opt').classList.toggle('selected', x.checked); });
-        renderMini();
+  function _encFiltrados() {
+    var todos = SS.catalog.db.getProdutos();
+    return todos.filter(function (p) {
+      var okCat = _encCatSel === 'todos' || p.categoria === _encCatSel;
+      if (!okCat) return false;
+      if (!_encBuscaTermo) return true;
+      var t = _encBuscaTermo.toLowerCase();
+      return (p.nome && p.nome.toLowerCase().indexOf(t) !== -1) || (p.descricaoCurta && p.descricaoCurta.toLowerCase().indexOf(t) !== -1) || (p.descricao && p.descricao.toLowerCase().indexOf(t) !== -1);
+    });
+  }
+
+  function _encRenderMini() {
+    var grid = document.getElementById('enc-mini-cat');
+    if (!grid) return;
+    var produtos = _encFiltrados();
+    if (!produtos.length) {
+      grid.innerHTML = '<p class="text-muted text-sm" style="grid-column:1/-1;text-align:center;padding:18px">' + (_encBuscaTermo ? 'Nenhum produto encontrado para "' + u.esc(_encBuscaTermo) + '".' : 'Nenhum produto nesta categoria.') + '</p>';
+      return;
+    }
+    grid.innerHTML = produtos.map(function (p) {
+      var ja = itens.filter(function (i) { return i.id === p.id; })[0];
+      var precoTxt = (p.preco === null || p.preco === undefined ? 'Sob consulta' : u.fmtBRL(p.preco));
+      return (
+        '<div class="mini-prod" data-prod="' + u.esc(p.id) + '">' +
+          (p.imagens && p.imagens[0] ? '<img src="' + u.esc(p.imagens[0]) + '" alt="' + u.esc(p.nome) + '" loading="lazy">' : '<span class="mini-prod__fallback" aria-hidden="true"><iconify-icon icon="ph:cake" width="22" height="22"></iconify-icon></span>') +
+          '<div class="mini-prod__body">' +
+            '<div class="mini-prod__name">' + u.esc(p.nome) + '</div>' +
+            '<div class="mini-prod__price">' + precoTxt + '</div>' +
+            (ja ? '<div class="text-sm" style="color:var(--success);font-weight:700">' + ja.qty + 'x na lista</div>' : '') +
+          '</div>' +
+          '<button type="button" class="mini-prod__add" aria-label="Adicionar ' + u.esc(p.nome) + '">+</button>' +
+        '</div>'
+      );
+    }).join('');
+    grid.querySelectorAll('[data-prod]').forEach(function (card) {
+      card.addEventListener('click', function (e) {
+        if (e.target.closest('button')) return;
+        var id = card.getAttribute('data-prod');
+        var p = obterProduto(id);
+        if (!p) return;
+        abrirModalEncomenda(p);
       });
     });
-    var buscEl = document.getElementById('enc-busca');
-    if (buscEl) {
-      buscEl.addEventListener('input', function () {
-        buscaTermo = buscEl.value.trim();
-        renderMini();
+    grid.querySelectorAll('.mini-prod__add').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var id = b.closest('.mini-prod').getAttribute('data-prod');
+        var p = obterProduto(id);
+        if (!p) return;
+        var exigeEscolha = (p.variacoes || []).some(function (v) { return !!(v.obrigatoria || v.min > 0); }) || (p.sabores && p.sabores.length) || (p.tamanhos && p.tamanhos.length);
+        if (exigeEscolha) { abrirModalEncomenda(p); return; }
+        var qtd = Math.max(1, p.quantidadeMinima || 1);
+        adicionarItem(p.id, qtd, '', {}, []);
+        SS.ui.toast(p.nome + ' adicionado à encomenda!');
       });
+    });
+  }
+
+  function initPassoProdutos() {
+    if (!_encInited) {
+      _encInited = true;
+      document.querySelectorAll('input[name="enc-cat"]').forEach(function (r) {
+        r.addEventListener('change', function () {
+          _encCatSel = r.value;
+          document.querySelectorAll('input[name="enc-cat"]').forEach(function (x) { x.closest('.opt').classList.toggle('selected', x.checked); });
+          _encRenderMini();
+        });
+      });
+      var buscEl = document.getElementById('enc-busca');
+      if (buscEl) {
+        buscEl.addEventListener('input', function () {
+          _encBuscaTermo = buscEl.value.trim();
+          _encRenderMini();
+        });
+      }
     }
-    renderMini();
+    _encRenderMini();
     renderListaItens();
   }
 
@@ -1248,8 +1267,10 @@ window.SS = window.SS || {};
         var idx = Number(b.getAttribute('data-idx'));
         var it = itens[idx];
         if (!it) return;
-        it.qty = Math.max(1, it.qty + Number(b.getAttribute('data-encqtd')));
-        renderListaItens(); renderResumo();
+        var prod = obterProduto(it.id);
+        var minQ = prod ? (prod.quantidadeMinima || 1) : 1;
+        it.qty = Math.max(minQ, it.qty + Number(b.getAttribute('data-encqtd')));
+        renderListaItens(); renderResumo(); _encRenderMini();
       });
     });
     el.querySelectorAll('[data-encinput]').forEach(function (inp) {
@@ -1257,22 +1278,29 @@ window.SS = window.SS || {};
         var idx = Number(inp.getAttribute('data-encinput'));
         var it = itens[idx];
         if (!it) return;
-        it.qty = Math.max(1, Number(inp.value) || 1);
-        renderListaItens(); renderResumo();
+        var prod = obterProduto(it.id);
+        var minQ = prod ? (prod.quantidadeMinima || 1) : 1;
+        it.qty = Math.max(minQ, Number(inp.value) || minQ);
+        renderListaItens(); renderResumo(); _encRenderMini();
       });
     });
     el.querySelectorAll('[data-encdel]').forEach(function (b) {
       b.addEventListener('click', function () {
         var idx = Number(b.getAttribute('data-encdel'));
         itens.splice(idx, 1);
-        renderListaItens(); renderResumo();
-        var mini = document.getElementById('enc-mini-cat');
-        if (mini) initPassoProdutos();
+        renderListaItens(); renderResumo(); _encRenderMini();
       });
     });
   }
 
   /* -------------------------- ETAPA 3 ------------------------------- */
+  function initPassoCliente() {
+    var nome = document.getElementById('f-nome');
+    var tel = document.getElementById('f-telefone');
+    if (nome) nome.addEventListener('input', function () { dados.cliente = nome.value.trim(); document.getElementById('g-nome').classList.remove('invalid'); });
+    if (tel) tel.addEventListener('input', function () { tel.value = u.mascaraTelefone(tel.value); dados.telefone = tel.value; document.getElementById('g-telefone').classList.remove('invalid'); });
+  }
+
   function initPassoEntrega() {
     document.querySelectorAll('input[name="modalidade"]').forEach(function (r) {
       r.addEventListener('change', function () {
@@ -1305,14 +1333,15 @@ window.SS = window.SS || {};
 
   /* -------------------------- ETAPA 4 ------------------------------- */
   function initPassoPagamento() {
-    /* Módulo compartilhado (pagamento.js): checkboxes com ícones, Pix QR mockado,
-       formulário de cartão, troco e botão "Simular pagamento". Após a aprovação
-       simulada, envia a encomenda pelo WhatsApp e avança para a confirmação. */
     SS.pagamento.init(document.getElementById('painel-esquerda'), dados, function () {
       finalizar();
       passo = TOTAIS;
       render();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, {
+      getValorTotal: function(){ return totalEstimado(); },
+      origem: 'encomenda',
+      onValidarExtra: function(){ return validarPasso(); }
     });
     var obs = document.getElementById('f-obs');
     if (obs) obs.addEventListener('input', function () { dados.observacoes = obs.value.trim(); });
@@ -1329,6 +1358,9 @@ window.SS = window.SS || {};
     var bannerUnificado = extrasCountRev > 0 ? '<div style="padding:10px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;margin-bottom:14px;font-size:13px;color:#065f46"><strong>Entrega unificada:</strong> ' + itens.length + ' itens serão entregues juntos no dia ' + (dados.data ? u.fmtData(dados.data) : 'agendado') + (dados.hora ? ' às ' + dados.hora : '') + ' — tudo em uma única entrega.</div>' : '';
     return (
       bannerUnificado +
+      '<div class="review-block"><h3>Cliente</h3><ul>' +
+        '<li>' + u.esc(dados.cliente || '—') + (dados.telefone ? ' · ' + u.esc(dados.telefone) : '') + '</li>' +
+      '</ul></div>' +
       '<div class="review-block"><h3>Evento</h3><ul>' +
         '<li>Data: ' + (dados.data ? u.fmtDataLongo(dados.data) : '—') + (dados.hora ? ' às ' + dados.hora : '') + '</li>' +
         '<li>Tipo: ' + u.esc(dados.evento || '—') + (dados.pessoas ? ' · Pessoas: ' + dados.pessoas : '') + '</li>' +
@@ -1346,7 +1378,7 @@ window.SS = window.SS || {};
         (end ? '<li>Endereço: ' + u.esc(end) + '</li>' : '') +
       '</ul></div>' +
       '<div class="review-block"><h3>Pagamento</h3><ul>' +
-        '<li>Forma: ' + u.esc(dados.pagamento || '—') + (dados.pagamentoAprovado ? ' (simulado, aprovado)' : '') + '</li>' +
+        '<li>Forma: ' + u.esc(dados.pagamento || '—') + (dados.pagamentoAprovado ? ' (confirmado)' : '') + '</li>' +
         '<li>Momento: ' + (dados.momentoPagamento === 'antecipado' ? 'Antecipado' : dados.momentoPagamento === 'na-entrega' ? 'Na entrega/retirada' : '—') + '</li>' +
         (SS.pagamento.cardUltimos4(dados) ? '<li>Cartão: ' + u.esc(SS.pagamento.cardMarca(dados)) + ' ···· ' + SS.pagamento.cardUltimos4(dados) + '</li>' : '') +
         (dados.momentoPagamento === 'na-entrega' && dados.pagamento === 'Dinheiro' ? '<li>Troco: ' + (dados.troco ? 'para ' + u.fmtBRL(Number(String(dados.trocoPara).replace(',', '.')) || 0) : 'não precisa') + '</li>' : '') +
@@ -1395,6 +1427,10 @@ window.SS = window.SS || {};
         return true;
       }
       if (passo === 2) {
+        var okC = true;
+        if (!dados.cliente) { document.getElementById('g-nome').classList.add('invalid'); okC = false; }
+        if (u.apenasDigitos(dados.telefone).length < 10) { document.getElementById('g-telefone').classList.add('invalid'); okC = false; }
+        if (!okC) { SS.ui.toast('Preencha seus dados de contato.', 'error'); return false; }
         if (dados.modalidade !== 'entrega') return true;
         var ok3 = true;
         if (!dados.endereco.rua) { document.getElementById('g-rua').classList.add('invalid'); ok3 = false; }
@@ -1436,9 +1472,20 @@ window.SS = window.SS || {};
     }
     if (passo === 2) {
       if (!itens.length) { SS.ui.toast('Adicione pelo menos um produto à encomenda.', 'error'); return false; }
+      // revalida data contra o prazo de produção dos produtos escolhidos
+      var dt2 = u.dataDeInput(dados.data);
+      var min2 = u.dataDeInput(dataMinimaISO());
+      if (dt2 && min2 && dt2 < min2) {
+        SS.ui.toast('Com estes produtos, a data mínima é ' + u.fmtData(min2) + '.', 'error');
+        return false;
+      }
       return true;
     }
     if (passo === 3) {
+      var okC2 = true;
+      if (!dados.cliente) { document.getElementById('g-nome').classList.add('invalid'); okC2 = false; }
+      if (u.apenasDigitos(dados.telefone).length < 10) { document.getElementById('g-telefone').classList.add('invalid'); okC2 = false; }
+      if (!okC2) { SS.ui.toast('Preencha seus dados de contato.', 'error'); return false; }
       if (dados.modalidade !== 'entrega') return true;
       var ok3 = true;
       if (!dados.endereco.rua) { document.getElementById('g-rua').classList.add('invalid'); ok3 = false; }
@@ -1464,6 +1511,7 @@ window.SS = window.SS || {};
   /* -------------------------- FINALIZAÇÃO --------------------------- */
   function finalizar() {
     if (!validarPasso()) return;
+    try { SS.pagamento.parar(); } catch (e) {}
     var trocoValor = dados.troco ? Number(String(dados.trocoPara).replace(',', '.')) || 0 : 0;
     syncItensUnico();
     var extrasCount = isModoUnico() ? Math.max(0, itens.length - 1) : 0;
@@ -1472,8 +1520,13 @@ window.SS = window.SS || {};
       var notaUnificada = 'Entrega unificada: todos os itens (' + itens.length + ') serão entregues juntos no dia agendado (' + (dados.data ? u.fmtData(dados.data) : '') + (dados.hora ? ' às ' + dados.hora : '') + ').';
       obsFinal = obsFinal ? obsFinal + ' | ' + notaUnificada : notaUnificada;
     }
+    var pixInfo=null;
+    if (dados.pagamento==='PIX' && dados._pixId && SS.pix) {
+      var pg=SS.pix.getPagamento(dados._pixId);
+      if(pg) pixInfo={ txid: pg.txid, status: pg.status, valor: pg.valor };
+    }
     var pedido = {
-      numero: u.gerarNumeroPedido(),
+      numero: dados._pixPedidoNumero || u.gerarNumeroPedido(),
       tipo: isModoUnico() && extrasCount > 0 ? 'Encomenda agendada (entrega unificada — ' + itens.length + ' itens no mesmo dia)' : 'Encomenda agendada',
       cliente: dados.cliente || '',
       telefone: dados.telefone || '',
@@ -1495,7 +1548,10 @@ window.SS = window.SS || {};
       pagamento: dados.pagamento,
       momentoPagamento: dados.momentoPagamento === 'antecipado' ? 'Antecipado' : 'Na entrega/retirada',
       troco: trocoValor,
-      pagamentoSimulado: true,
+      pagamentoSimulado: !!dados.pagamentoAprovado,
+      pixTxid: pixInfo?pixInfo.txid:'',
+      pixStatus: pixInfo?pixInfo.status:'',
+      pixValor: pixInfo?pixInfo.valor:null,
       cardMarca: SS.pagamento.cardMarca(dados),
       cardUltimos4: SS.pagamento.cardUltimos4(dados),
       subtotal: subtotalItens(),

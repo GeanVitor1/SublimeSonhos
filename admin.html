@@ -48,7 +48,6 @@
             </div>
             <button type="submit" class="btn btn--primary btn--block mt-3" id="btn-entrar">Entrar <iconify-icon icon="ph:arrow-right" width="16" height="16"></iconify-icon></button>
             <p class="text-sm text-center mt-2" id="login-aviso" style="display:none;color:var(--danger);font-weight:700"><iconify-icon icon="ph:warning-circle" width="14" height="14" style="vertical-align:-2px"></iconify-icon> Senha incorreta. Tente novamente.</p>
-            <p class="form-hint text-center mt-3">Dica: a senha inicial é <code>sublime2026</code> e pode ser alterada em Configurações → Acesso.</p>
           </form>
           <p class="text-center mt-3" style="font-size:12px;color:var(--muted)"><a href="index.html" style="font-weight:700;color:var(--terra)">← Voltar para a loja</a></p>
         </div>
@@ -69,12 +68,13 @@
       </div>
 
       <div class="admin-banner" id="banner-demo">
-        <iconify-icon icon="ph:warning-circle" width="16" height="16" style="vertical-align:-2px"></iconify-icon> <span><strong>Modo demonstração:</strong> as alterações ficam salvas apenas neste navegador (localStorage). Para publicar os cadastros para todos os clientes, ative o Supabase conforme o README.md.</span>
+        <iconify-icon icon="ph:info" width="16" height="16" style="vertical-align:-2px"></iconify-icon> <span><strong>Acesso da loja:</strong> as alterações ficam salvas neste navegador e refletem na vitrine imediatamente. Para sincronizar entre dispositivos, solicite a ativação do banco de dados.</span>
       </div>
 
       <div class="admin-tabs" role="tablist">
         <button type="button" class="active" data-tab="produtos">Produtos</button>
         <button type="button" data-tab="categorias">Categorias</button>
+        <button type="button" data-tab="pix">Pix & Pagamentos</button>
         <button type="button" data-tab="config">Configurações</button>
       </div>
 
@@ -87,7 +87,7 @@
             <button type="button" class="btn btn--primary btn--sm" id="btn-novo">+ Novo produto</button>
           </div>
         </div>
-        <div id="tabela-produtos" class="admin-cards"><!-- cards via JS --></div>
+        <div id="tabela-produtos" class="admin-produtos-stack"><!-- seções por categoria via JS --></div>
       </div>
 
       <!-- TAB CATEGORIAS -->
@@ -102,14 +102,66 @@
         <div id="tabela-categorias" class="admin-cat-grid"><!-- cards via JS --></div>
       </div>
 
+      <!-- TAB PIX / PAGAMENTOS -->
+      <div data-tabpanel="pix" class="hidden">
+        <div class="admin-banner" style="background:var(--pistachio-soft);color:#2f4a20;border:1px solid rgba(127,176,105,0.22)">
+          <iconify-icon icon="ph:qr-code" width="16" height="16" style="vertical-align:-2px"></iconify-icon>
+          <span><strong>Pix da loja:</strong> configure sua chave abaixo. Ela será usada para gerar o QR Code + copia-e-cola nas telas de pagamento (carrinho, encomenda e bolo). O sistema verifica o status: pendente → aguardando confirmação → pago.</span>
+        </div>
+        <form class="admin-form" id="form-pix">
+          <section>
+            <h3><iconify-icon icon="ph:qr-code" width="18" height="18" style="vertical-align:-2px"></iconify-icon> Chave Pix da loja</h3>
+            <p class="text-sm text-muted mb-2">Cadastre <strong>sua</strong> chave Pix. Ela aparece no QR Code do cliente. Deixe vazia para ocultar o Pix até configurar. A verificação de pagamento é feita por tempo + confirmação manual (pronto para plugar PSP como Gerencianet/Mercado Pago via webhook).</p>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label" for="cfg-pix-tipo">Tipo de chave <span class="req">*</span></label>
+                <select class="form-control" id="cfg-pix-tipo">
+                  <option value="CPF">CPF (11 dígitos)</option>
+                  <option value="CNPJ">CNPJ (14 dígitos)</option>
+                  <option value="TELEFONE">Telefone (com DDD)</option>
+                  <option value="EMAIL">E-mail</option>
+                  <option value="ALEATORIA">Chave aleatória (UUID)</option>
+                </select>
+              </div>
+              <div class="form-group" style="flex:2"><label class="form-label" for="cfg-pix-chave">Chave Pix <span class="req">*</span></label><input class="form-control" id="cfg-pix-chave" type="text" placeholder="Ex.: 73981756809, seu@email.com ou 123e4567-e89b-12d3-a456-426614174000"><div class="form-hint" id="pix-chave-hint"></div><div class="form-error" id="pix-chave-err">Verifique a chave Pix.</div></div>
+            </div>
+            <div class="form-row" style="margin-top:14px">
+              <div class="form-group"><label class="form-label" for="cfg-pix-nome">Nome do recebedor (até 25 letras)</label><input class="form-control" id="cfg-pix-nome" type="text" maxlength="25" placeholder="Ex.: Sublime Sonhos"></div>
+              <div class="form-group"><label class="form-label" for="cfg-pix-cidade">Cidade (até 15 letras)</label><input class="form-control" id="cfg-pix-cidade" type="text" maxlength="15" placeholder="Ex.: Aurelino Leal"></div>
+              <div class="form-group"><label class="form-label" for="cfg-pix-expira">Expiração do QR (minutos)</label><input class="form-control" id="cfg-pix-expira" type="number" min="5" max="1440" step="5" placeholder="30"></div>
+            </div>
+            <div class="form-group mt-2"><label class="form-label" for="cfg-pix-msg">Mensagem/descrição no Pix (opcional)</label><input class="form-control" id="cfg-pix-msg" type="text" maxlength="35" placeholder="Ex.: Pedido Sublime Sonhos"><p class="form-hint">Aparece como descrição na transação Pix do cliente.</p></div>
+            <div class="flex gap-3 items-center mt-3" style="flex-wrap:wrap">
+              <button type="submit" class="btn btn--primary"><iconify-icon icon="ph:check" width="16" height="16"></iconify-icon> Salvar Pix</button>
+              <button type="button" class="btn btn--outline btn--sm" id="btn-testar-pix">Gerar QR de teste</button>
+              <span class="text-sm text-muted" id="pix-status"></span>
+            </div>
+            <div id="pix-teste-area" class="hidden mt-3" style="background:#fffdf9;border:1.5px solid var(--line);border-radius:14px;padding:14px"></div>
+          </section>
+        </form>
+
+        <section style="margin-top:18px;background:var(--sand-3);border-radius:var(--r-lg);padding:22px;box-shadow:var(--shadow-sm);border:1px solid rgba(43,37,29,0.08)">
+          <div class="flex gap-3 items-center justify-between" style="flex-wrap:wrap;margin-bottom:14px">
+            <h3 style="font-size:16px;color:var(--terra-dark);margin:0;display:flex;gap:8px;align-items:center"><iconify-icon icon="ph:receipt" width="18" height="18"></iconify-icon> Pagamentos Pix recentes</h3>
+            <div class="flex gap-2">
+              <select class="form-control" id="filtro-pix-status" aria-label="Filtrar pagamentos Pix por status" style="min-width:160px"><option value="">Todos os status</option><option value="pendente">Pendente</option><option value="aguardando_confirmacao">Aguardando confirmação</option><option value="pago">Pago</option><option value="expirado">Expirado</option><option value="cancelado">Cancelado</option></select>
+              <button type="button" class="btn btn--outline btn--sm" id="btn-limpar-pix">Limpar expirados</button>
+            </div>
+          </div>
+          <p class="text-sm text-muted mb-3">Lista local (neste navegador) de tentativas Pix geradas por clientes. Clique em <strong>Confirmar</strong> quando receber o valor na sua conta. Para integração automática com PSP (Gerencianet, Mercado Pago, etc.), conecte o webhook em <code>assets/js/pix.js:verificarPagamentoRemoto</code>.</p>
+          <div id="tabela-pix-pagamentos"><!-- via JS --></div>
+        </section>
+      </div>
+
       <!-- TAB CONFIG -->
       <div data-tabpanel="config" class="hidden">
         <form class="admin-form" id="form-config">
           <section>
             <h3>WhatsApp e redes</h3>
-            <div class="form-row">
+            <div class="form-row form-row--rede">
               <div class="form-group"><label class="form-label" for="cfg-wa">Número do WhatsApp (com DDD)</label><input class="form-control" id="cfg-wa" type="tel" inputmode="numeric" placeholder="73981756809"></div>
               <div class="form-group"><label class="form-label" for="cfg-link">Link comercial (wa.me/message/…)</label><input class="form-control" id="cfg-link" type="url" placeholder="https://wa.me/message/…"></div>
+            </div>
+            <div class="form-row form-row--rede" style="margin-top:14px">
               <div class="form-group"><label class="form-label" for="cfg-ig">Instagram (URL)</label><input class="form-control" id="cfg-ig" type="url" placeholder="https://instagram.com/…"></div>
               <div class="form-group"><label class="form-label" for="cfg-igu">Usuário do Instagram</label><input class="form-control" id="cfg-igu" type="text" placeholder="@sonhosublime_"></div>
             </div>
@@ -120,22 +172,57 @@
               <div class="form-group"><label class="form-label" for="cfg-area">Área atendida</label><input class="form-control" id="cfg-area" type="text"></div>
               <div class="form-group"><label class="form-label" for="cfg-cidade">Cidade</label><input class="form-control" id="cfg-cidade" type="text"></div>
               <div class="form-group"><label class="form-label" for="cfg-end">Endereço (retirada)</label><input class="form-control" id="cfg-end" type="text"></div>
+            </div>
+            <div class="form-row" style="margin-top:14px">
               <div class="form-group"><label class="form-label" for="cfg-horario">Horário de atendimento</label><input class="form-control" id="cfg-horario" type="text"></div>
               <div class="form-group"><label class="form-label" for="cfg-ant">Antecedência mínima (dias)</label><input class="form-control" id="cfg-ant" type="number" min="0" max="30"></div>
             </div>
           </section>
           <section>
             <h3>Entrega</h3>
-            <div class="form-row">
-              <div class="form-group"><label class="form-label" for="cfg-ent-modo">Modo de cálculo</label>
-                <select class="form-control" id="cfg-ent-modo">
-                  <option value="confirmar">Confirmar pelo WhatsApp</option>
-                  <option value="fixa">Taxa fixa</option>
-                  <option value="bairro">Taxa por bairro</option>
-                </select>
+            <p class="text-sm text-muted" style="margin: -4px 0 14px">Como a taxa de entrega é calculada e exibida para o cliente.</p>
+            <div class="form-group">
+              <label class="form-label">Como cobrar a entrega? <span class="req">*</span></label>
+              <div class="entrega-modos" id="entrega-modos">
+                <label class="entrega-modo-card" data-modo="confirmar">
+                  <input type="radio" name="ent-modo-card" value="confirmar" class="sr-only">
+                  <span class="entrega-modo-card__ico"><iconify-icon icon="ph:chat-circle" width="22" height="22"></iconify-icon></span>
+                  <span class="entrega-modo-card__text"><strong>Confirmar no WhatsApp</strong></span>
+                  <span class="entrega-modo-card__check"><iconify-icon icon="ph:check" width="16" height="16"></iconify-icon></span>
+                </label>
+                <label class="entrega-modo-card" data-modo="fixa">
+                  <input type="radio" name="ent-modo-card" value="fixa" class="sr-only">
+                  <span class="entrega-modo-card__ico"><iconify-icon icon="ph:package" width="22" height="22"></iconify-icon></span>
+                  <span class="entrega-modo-card__text"><strong>Taxa fixa</strong></span>
+                  <span class="entrega-modo-card__check"><iconify-icon icon="ph:check" width="16" height="16"></iconify-icon></span>
+                </label>
+                <label class="entrega-modo-card" data-modo="bairro">
+                  <input type="radio" name="ent-modo-card" value="bairro" class="sr-only">
+                  <span class="entrega-modo-card__ico"><iconify-icon icon="ph:map-pin" width="22" height="22"></iconify-icon></span>
+                  <span class="entrega-modo-card__text"><strong>Taxa por bairro</strong></span>
+                  <span class="entrega-modo-card__check"><iconify-icon icon="ph:check" width="16" height="16"></iconify-icon></span>
+                </label>
               </div>
-              <div class="form-group" id="cfg-taxa-wrap"><label class="form-label" for="cfg-taxa">Taxa fixa (R$)</label><input class="form-control" id="cfg-taxa" type="number" min="0" step="0.5"></div>
-              <div class="form-group" id="cfg-bairros-wrap" class="hidden"><label class="form-label" for="cfg-bairros">Taxa por bairro (uma por linha: bairro;valor)</label><textarea class="form-control" id="cfg-bairros" rows="4" placeholder="centro;5,00&#10;bairro exemplo;8,00"></textarea></div>
+              <select class="form-control hidden" id="cfg-ent-modo" aria-hidden="true" tabindex="-1">
+                <option value="confirmar">Confirmar pelo WhatsApp</option>
+                <option value="fixa">Taxa fixa</option>
+                <option value="bairro">Taxa por bairro</option>
+              </select>
+            </div>
+            <div class="form-group hidden" id="cfg-taxa-wrap" style="margin-top:14px;background:var(--sand-2);border:1.5px solid var(--line);border-radius:14px;padding:14px">
+              <label class="form-label" for="cfg-taxa"><iconify-icon icon="ph:currency-dollar" width="14" height="14"></iconify-icon> Valor único da entrega</label>
+              <div style="display:flex;gap:10px;align-items:center;max-width:260px">
+                <span style="font-weight:700;color:var(--muted)">R$</span>
+                <input class="form-control" id="cfg-taxa" type="number" min="0" step="0.5" placeholder="Ex.: 7,00">
+              </div>
+              <p class="form-hint">Cobrado igual para qualquer endereço. Deixe 0 para grátis.</p>
+            </div>
+            <div class="form-group hidden" id="cfg-bairros-wrap" style="margin-top:14px;background:var(--sand-2);border:1.5px solid var(--line);border-radius:14px;padding:14px">
+              <label class="form-label"><iconify-icon icon="ph:map-pin" width="14" height="14"></iconify-icon> Bairros e taxas</label>
+              <div id="bairro-list" class="bairro-list"></div>
+              <button type="button" class="btn btn--outline btn--sm" id="btn-add-bairro" style="margin-top:10px"><iconify-icon icon="ph:plus" width="14" height="14"></iconify-icon> Adicionar bairro</button>
+              <p class="form-hint" style="margin-top:8px">Cada linha é um bairro. <strong>Ex.: Centro — R$ 5,00</strong>. Bairro não listado usa taxa fixa (se houver) ou “a confirmar”.</p>
+              <textarea class="form-control hidden" id="cfg-bairros" rows="4" aria-hidden="true" tabindex="-1"></textarea>
             </div>
             <div class="form-row mt-2">
               <div class="form-group"><label class="form-label" for="cfg-ent-nota">Nota exibida ao cliente</label><input class="form-control" id="cfg-ent-nota" type="text"></div>
@@ -158,15 +245,10 @@
           </section>
           <section>
             <h3>Acesso</h3>
-            <p class="text-sm text-muted mb-2">Senha única do painel. Fica salva apenas neste navegador (localStorage).</p>
-            <div class="form-row">
-              <div class="form-group"><label class="form-label" for="cfg-senha-atual">Senha atual</label><input class="form-control" id="cfg-senha-atual" type="password" autocomplete="current-password" placeholder="Senha atual"></div>
-              <div class="form-group"><label class="form-label" for="cfg-senha-nova">Nova senha</label><input class="form-control" id="cfg-senha-nova" type="password" autocomplete="new-password" placeholder="Mín. 6 caracteres"></div>
-              <div class="form-group"><label class="form-label" for="cfg-senha-conf">Confirmar nova senha</label><input class="form-control" id="cfg-senha-conf" type="password" autocomplete="new-password" placeholder="Repita a nova senha"></div>
-            </div>
-            <div class="flex gap-3 items-center mt-2">
-              <button type="button" class="btn btn--outline btn--sm" id="btn-trocar-senha">Alterar senha</button>
-              <span class="text-sm text-muted" id="senha-status"></span>
+            <p class="text-sm text-muted mb-2">A senha do painel é verificada no servidor e fica protegida contra tentativas de força bruta.</p>
+            <div class="admin-banner" style="background:var(--sand-2);color:var(--muted);border:1px solid var(--line)">
+              <iconify-icon icon="ph:lock-key" width="16" height="16" style="vertical-align:-2px"></iconify-icon>
+              <span>Para alterar a senha, edite a variável de ambiente <code>ADMIN_PASSWORD</code> nas configurações do projeto na Vercel (Settings → Environment Variables) e faça um novo deploy.</span>
             </div>
           </section>
           <div class="flex gap-3 items-center">
@@ -182,8 +264,11 @@
 
   <div class="modal-overlay" id="modal">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <h3 id="modal-title">Título</h3>
-      <div id="modal-body" style="margin-top:14px"></div>
+      <div class="modal__head">
+        <h3 id="modal-title">Título</h3>
+        <button type="button" class="modal__close" id="modal-close" aria-label="Fechar"><iconify-icon icon="ph:x" width="18" height="18"></iconify-icon></button>
+      </div>
+      <div id="modal-body"></div>
       <div class="modal-actions" id="modal-actions"></div>
     </div>
   </div>
@@ -192,6 +277,7 @@
   <script src="assets/js/utils.js"></script>
   <script src="assets/js/data/catalogo.js"></script>
   <script src="assets/js/cart.js"></script>
+  <script src="assets/js/pix.js"></script>
   <script src="assets/js/whatsapp.js"></script>
   <script src="assets/js/ui.js"></script>
   <script src="assets/js/pages/admin.js"></script>

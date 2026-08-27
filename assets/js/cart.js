@@ -96,20 +96,29 @@ window.SS = window.SS || {};
     return ler().reduce(function (s, i) { return s + i.qty; }, 0);
   }
 
+  /* Preço unitário atual de um item do carrinho (sem a qty).
+     Recalculado a partir do catálogo sempre que possível — evita que o valor
+     gravado no localStorage (ss_cart_v1) seja adulterado via console. */
+  function precoUnitarioItem(item) {
+    var prod = (SS.catalog && SS.catalog.db && SS.catalog.db.getProduto) ? SS.catalog.db.getProduto(item.id) : null;
+    var pu = prod ? calcularPrecoUnitario(prod, { variacoes: item.variacoes, adicionais: item.adicionais, qty: item.qty }) : null;
+    if (pu !== null && pu !== undefined) return pu;
+    return (item.unitPrice === null || item.unitPrice === undefined) ? null : item.unitPrice;
+  }
+
   function subtotal() {
     return ler().reduce(function (s, i) {
-      if (i.unitPrice === null || i.unitPrice === undefined) return s;
-      return s + i.unitPrice * i.qty;
+      var pu = precoUnitarioItem(i);
+      if (pu === null || pu === undefined) return s;
+      return s + pu * i.qty;
     }, 0);
   }
 
-  /* Preço unitário atual de um item do carrinho (sem a qty). */
-  function precoUnitarioItem(item) {
-    return item.unitPrice === null || item.unitPrice === undefined ? null : item.unitPrice;
-  }
-
   function temItensSobConsulta() {
-    return ler().some(function (i) { return i.unitPrice === null || i.unitPrice === undefined; });
+    return ler().some(function (i) {
+      var pu = precoUnitarioItem(i);
+      return pu === null || pu === undefined;
+    });
   }
 
   function formatarOpcoes(item) {

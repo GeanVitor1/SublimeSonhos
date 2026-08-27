@@ -19,7 +19,7 @@ window.SS = window.SS || {};
     if (p.precoSobConsulta || p.preco === null || p.preco === undefined) {
       return '<span class="product-card__price product-card__price--consulta"><small>Sob consulta</small>Valor a combinar</span>';
     }
-    var comAcrescimo = (p.variacoes || []).some(function (v) { return v.opcoes.some(function (o) { return o.acrescimo; }); });
+    var comAcrescimo = (p.variacoes || []).some(function (v) { return (v.opcoes || []).some(function (o) { return o.acrescimo; }); });
     var html = '';
     if (comAcrescimo) html += '<small>A partir de</small>';
     html += u.fmtBRL(p.preco);
@@ -104,7 +104,7 @@ window.SS = window.SS || {};
     var base = p.preco === null || p.preco === undefined ? 0 : p.preco;
     var total = Math.round((base + extras) * 100) / 100;
     var temPromo = p.precoPromo && p.precoPromo < p.preco;
-    var temAcrescimo = (p.variacoes || []).some(function (v) { return v.opcoes.some(function (o) { return o.acrescimo; }); });
+    var temAcrescimo = (p.variacoes || []).some(function (v) { return (v.opcoes || []).some(function (o) { return o.acrescimo; }); });
     var todosOk = grupos.every(function (g) {
       var n = selArray(g, sel).length;
       return n >= (g.min || 0) && (g.max ? n <= g.max : true) && (!g.obrigatoria || n > 0);

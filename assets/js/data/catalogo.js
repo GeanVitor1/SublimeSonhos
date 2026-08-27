@@ -6,11 +6,11 @@
    informação comercial foi inventado: bolos sem preço no arquivo original
    aparecem como "Preço sob consulta".
 
-   IMPORTANTE (validação inicial):
+   IMPORTANTE:
    - Este é um catálogo ESTÁTICO de partida, carregado no navegador.
-   - A área administrativa salva alterações em localStorage neste navegador
-     (modo demonstração). Elas são mescladas sobre este catálogo aqui.
-   - Para publicar cadastros para todos os clientes, ative o Supabase
+   - A área administrativa salva alterações neste navegador
+     e as mescla sobre este catálogo aqui.
+   - Para sincronizar entre dispositivos, ative o backend
      (veja README.md). A camada de dados já está isolada: para conectar um
      banco, basta substituir as funções do objeto SS.catalog.db.
    ========================================================================= */
@@ -118,7 +118,7 @@ window.SS = window.SS || {};
       descricao: 'Bolo no pote com massa de chocolate (280 g) e sabor brigadeiro. Praticidade e sabor em um só pote.',
       imagens: IMG_LIST(['bolo-pote-brigadeiro']),
       preco: 14, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0 }],
+      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0.01 }],
       observacoes: '', disponibilidade: true, esgotado: false, prazoProducaoDias: 0,
       prontaEntrega: true, encomenda: true, destaque: true, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
@@ -129,7 +129,7 @@ window.SS = window.SS || {};
       descricao: 'Bolo no pote com massa de chocolate (280 g) e sabor casadinho.',
       imagens: IMG_LIST(['bolo-pote-casadinho']),
       preco: 14, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0 }],
+      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0.01 }],
       observacoes: '', disponibilidade: true, esgotado: false, prazoProducaoDias: 0,
       prontaEntrega: true, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
@@ -140,7 +140,7 @@ window.SS = window.SS || {};
       descricao: 'Bolo no pote com massa de chocolate (280 g) e sabor ninho.',
       imagens: IMG_LIST(['bolo-pote-ninho']),
       preco: 14, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0 }],
+      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0.01 }],
       observacoes: '', disponibilidade: true, esgotado: false, prazoProducaoDias: 0,
       prontaEntrega: true, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
@@ -151,7 +151,7 @@ window.SS = window.SS || {};
       descricao: 'Bolo no pote com massa de chocolate (280 g) e sabor ninho com nutella.',
       imagens: IMG_LIST(['bolo-pote-ninho-nutella']),
       preco: 14, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0 }],
+      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0.01 }],
       observacoes: '', disponibilidade: true, esgotado: false, prazoProducaoDias: 0,
       prontaEntrega: true, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Manter refrigerado. Consumir em até 3 dias.'
@@ -195,7 +195,7 @@ window.SS = window.SS || {};
       descricao: 'Docinhos artesanais. Consulte os sabores disponíveis e monte sua quantidade ideal para a sua festa ou momento especial.',
       imagens: IMG_LIST(['docinhos']),
       preco: 2.5, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0 }],
+      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0.01 }],
       observacoes: 'Informe os sabores desejados e a quantidade.',
       disponibilidade: true, esgotado: false, prazoProducaoDias: 0,
       prontaEntrega: true, encomenda: true, destaque: false, ativo: true,
@@ -230,7 +230,7 @@ window.SS = window.SS || {};
       descricaoCurta: 'Deseja colher no seu pedido?',
       descricao: 'Colher descartável para acompanhar seu pedido.',
       imagens: IMG_LIST(['colher-descartavel']),
-      preco: 0, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
+       preco: 0.01, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
       variacoes: [], sabores: [], tamanhos: [], adicionais: [],
       observacoes: '', disponibilidade: true, esgotado: false, prazoProducaoDias: 0,
       prontaEntrega: true, encomenda: true, destaque: false, ativo: true,
@@ -387,7 +387,7 @@ window.SS = window.SS || {};
       id: 'bolo-decorado-22cm', nome: 'Bolo decorado 22 cm', categoria: 'bolos',
       descricaoCurta: 'Bolo decorado (22 cm) para festas médias.',
       descricao: 'Bolo decorado (22 cm) para festas médias. Consulte temas, sabores e valores.',
-      imagens: IMG_LIST(['bolo-decorado-30cm']),
+      imagens: IMG_LIST(['bolo-decorado-22cm']),
       preco: null, precoPromo: null, precoSobConsulta: true, unidade: 'un', quantidadeMinima: 1,
       variacoes: [GC('Sabor', 2, 3, true, [OP('Massa - Limão', 10), OP('Massa - baunilha'), OP('Massa red velvet', 10), OP('Massa - Chocolate'), OP('Recheio - Ninho'), OP('Recheio - Brigadeiro'), OP('Recheio - coco'), OP('Recheio - Ninho com geleia de morango', 20), OP('Recheio - Abacaxi', 20), OP('Recheio - Limão', 10), OP('Nutella', 15), OP('Creme cheese', 26), OP('Coco com ameixa', 15)])], sabores: [], tamanhos: [], adicionais: [],
       observacoes: 'Escolha de 2 a 3 opções.', disponibilidade: true, esgotado: false, prazoProducaoDias: 3,
@@ -539,8 +539,8 @@ window.SS = window.SS || {};
       descricaoCurta: 'Creme de Ninho, brigadeiro, morangos frescos, MM\'s, paçoca e jujubas.',
       descricao: 'Copo temático kids com creme de Ninho, brigadeiro, morangos frescos, MM\'s, paçoca e jujubas. Uma combinação cheia de cores, sabor e diversão em cada colherada!',
       imagens: IMG_LIST(['copo-sonho-kids']),
-      preco: 20, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0 }],
+       preco: 20, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
+      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0.01 }],
       observacoes: '', disponibilidade: true, esgotado: false, prazoProducaoDias: 0,
       prontaEntrega: true, encomenda: true, destaque: true, ativo: true,
       conservacao: 'Consumir preferencialmente no mesmo dia. Manter refrigerado.'
@@ -551,7 +551,7 @@ window.SS = window.SS || {};
       descricao: 'Copo com creme de brigadeiro, creme de ninho e morango. Uma combinação clássica e saborosa.',
       imagens: IMG_LIST(['copo-morango']),
       preco: 18, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0 }],
+      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0.01 }],
       observacoes: '', disponibilidade: true, esgotado: false, prazoProducaoDias: 0,
       prontaEntrega: true, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Consumir preferencialmente no mesmo dia. Manter refrigerado.'
@@ -562,7 +562,7 @@ window.SS = window.SS || {};
       descricao: 'Copo com creme de ninho e morango. Simples e delicioso.',
       imagens: IMG_LIST(['copo-ninho-morango']),
       preco: 18, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0 }],
+      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0.01 }],
       observacoes: '', disponibilidade: true, esgotado: false, prazoProducaoDias: 0,
       prontaEntrega: true, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Consumir preferencialmente no mesmo dia. Manter refrigerado.'
@@ -573,7 +573,7 @@ window.SS = window.SS || {};
       descricao: 'Copo com creme de brigadeiro, creme de ninho, amendoim e nutella. Um blend de sabores premium.',
       imagens: IMG_LIST(['copo-ferreiro-rocher']),
       preco: 18, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0 }],
+      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0.01 }],
       observacoes: '', disponibilidade: true, esgotado: false, prazoProducaoDias: 0,
       prontaEntrega: true, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Consumir preferencialmente no mesmo dia. Manter refrigerado.'
@@ -584,7 +584,7 @@ window.SS = window.SS || {};
       descricao: 'Copo tropical com creme de brigadeiro, creme de ninho, morango e uvas verdes. Uma viagem de sabor no verão.',
       imagens: IMG_LIST(['copo-tropical']),
       preco: 18, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0 }],
+      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0.01 }],
       observacoes: '', disponibilidade: true, esgotado: false, prazoProducaoDias: 0,
       prontaEntrega: true, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Consumir preferencialmente no mesmo dia. Manter refrigerado.'
@@ -595,7 +595,7 @@ window.SS = window.SS || {};
       descricao: 'Copo com cremes de Ninho, brigadeiro e uvas verdes. Uma combinação doce e refrescante.',
       imagens: IMG_LIST(['copo-uva']),
       preco: 18, precoPromo: null, precoSobConsulta: false, unidade: 'un', quantidadeMinima: 1,
-      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0 }],
+      variacoes: [], sabores: [], tamanhos: [], adicionais: [{ nome: 'Colher descartável', preco: 0.01 }],
       observacoes: '', disponibilidade: true, esgotado: false, prazoProducaoDias: 0,
       prontaEntrega: true, encomenda: true, destaque: false, ativo: true,
       conservacao: 'Consumir preferencialmente no mesmo dia. Manter refrigerado.'
@@ -606,7 +606,6 @@ window.SS = window.SS || {};
   /* CAMADA DE DADOS                                                     */
   /* ------------------------------------------------------------------ */
   var STORAGE_KEY = 'ss_admin_overrides_v1';
-  var SENHA_KEY = 'ss_admin_senha_v1';
 
   function lerOverrides() {
     try {
@@ -625,14 +624,6 @@ window.SS = window.SS || {};
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ov)); } catch (e) {}
   }
 
-  function getSenhaAtual() {
-    try { return localStorage.getItem(SENHA_KEY) || SS.config.admin.senhaDemo; } catch (e) { return SS.config.admin.senhaDemo; }
-  }
-
-  function setSenhaNova(senha) {
-    try { localStorage.setItem(SENHA_KEY, senha); } catch (e) {}
-  }
-
   function aplicarOverride(p, ov) {
     if (!ov) return p;
     if (ov._excluido) return null;
@@ -648,6 +639,21 @@ window.SS = window.SS || {};
       return c;
     });
   }
+  function getCategoriasDeProduto(p) {
+    if (Array.isArray(p.categorias) && p.categorias.length) return p.categorias.filter(Boolean);
+    if (Array.isArray(p.categoria) && p.categoria.length) return p.categoria.filter(Boolean);
+    if (p.categoria) return [String(p.categoria)];
+    return [];
+  }
+  function produtoPertenceCategoria(p, catId) {
+    return getCategoriasDeProduto(p).indexOf(catId) !== -1;
+  }
+  function produtoTemCategoriaVisivel(p, catIds) {
+    var cats = getCategoriasDeProduto(p);
+    if (!cats.length) return !p.categoria; // sem categoria -> mostra se não filtrado? mas oculta se categoria exigida
+    for (var i=0;i<cats.length;i++) if (catIds[cats[i]]) return true;
+    return false;
+  }
 
   function getProdutos() {
     var ov = lerOverrides().produtos || {};
@@ -660,14 +666,16 @@ window.SS = window.SS || {};
       if (o && o._excluido) return;
       var m = aplicarOverride(p, o);
       if (!m || !m.ativo) return;
-      if (m.categoria && !catIds[m.categoria]) return;
+      var catsProd = getCategoriasDeProduto(m);
+      if (catsProd.length && !produtoTemCategoriaVisivel(m, catIds)) return;
       lista.push(m);
     });
     Object.keys(ov).forEach(function (id) {
       if (PRODUTOS_BASE.some(function (p) { return p.id === id; })) return;
       var o = ov[id];
       if (!o || o._excluido || !o.ativo) return;
-      if (o.categoria && !catIds[o.categoria]) return;
+      var catsProd2 = getCategoriasDeProduto(Object.assign({ id: id }, o));
+      if (catsProd2.length && !produtoTemCategoriaVisivel(Object.assign({ id: id }, o), catIds)) return;
       lista.push(Object.assign({ id: id }, o));
     });
     return lista;
@@ -681,13 +689,21 @@ window.SS = window.SS || {};
     if (base) {
       var m = aplicarOverride(base, o);
       if (!m || !m.ativo) return null;
-      var cat = getCategoria(m.categoria);
-      if (cat && cat.ativo === false) return null;
+      var catsM = getCategoriasDeProduto(m);
+      if (catsM.length) {
+        var visivelAlgum = false;
+        for (var i=0;i<catsM.length;i++) { var cc = getCategoria(catsM[i]); if (!cc || cc.ativo !== false) { visivelAlgum = true; break; } }
+        if (!visivelAlgum) return null;
+      }
       return m;
     }
     if (o && o.ativo) {
-      var cat2 = getCategoria(o.categoria);
-      if (cat2 && cat2.ativo === false) return null;
+      var catsO = getCategoriasDeProduto(Object.assign({ id: id }, o));
+      if (catsO.length) {
+        var vis2 = false;
+        for (var j=0;j<catsO.length;j++) { var c2 = getCategoria(catsO[j]); if (!c2 || c2.ativo !== false) { vis2 = true; break; } }
+        if (!vis2) return null;
+      }
       return Object.assign({ id: id }, o);
     }
     return null;
@@ -710,12 +726,12 @@ window.SS = window.SS || {};
   }
 
   function getProdutosPorCategoria(catId) {
-    return getProdutos().filter(function (p) { return p.categoria === catId; });
+    return getProdutos().filter(function (p) { return produtoPertenceCategoria(p, catId); });
   }
 
   function getCategorias() {
     var ov = lerOverrides();
-    var base = ov.categorias && ov.categorias.length ? ov.categorias : CATEGORIAS_BASE;
+    var base = ov.categorias !== null && ov.categorias !== undefined ? ov.categorias : CATEGORIAS_BASE;
     return normalizarCategorias(base.slice());
   }
 
@@ -735,10 +751,9 @@ window.SS = window.SS || {};
   }
 
   function contarProdutosPorCategoria(catId) {
-    var ov = lerOverrides().produtos || {};
     var todos = getProdutosTodos();
     var cnt = 0;
-    todos.forEach(function (p) { if (p.categoria === catId && !p._excluido) cnt++; });
+    todos.forEach(function (p) { if (produtoPertenceCategoria(p, catId) && !p._excluido) cnt++; });
     return cnt;
   }
 
@@ -746,7 +761,7 @@ window.SS = window.SS || {};
   function aplicarConfiguracoes() {
     var ov = lerOverrides().configuracoes;
     if (!ov) return;
-    if (ov.whatsappNumero) SS.config.whatsapp.numero = ov.whatsappNumero;
+    if (ov.whatsappNumero) SS.config.whatsapp.numero = String(ov.whatsappNumero).replace(/\D/g, '');
     if (ov.linkComercial) SS.config.whatsapp.linkComercial = ov.linkComercial;
     if (ov.instagram) SS.config.social.instagram = ov.instagram;
     if (ov.instagramUsuario) SS.config.social.instagramUsuario = ov.instagramUsuario;
@@ -754,7 +769,7 @@ window.SS = window.SS || {};
     if (ov.cidade) SS.config.loja.cidade = ov.cidade;
     if (ov.endereco !== undefined) SS.config.loja.endereco = ov.endereco;
     if (ov.horario) SS.config.loja.horario = ov.horario;
-    if (ov.antecedenciaMinimaDias) SS.config.loja.antecedenciaMinimaDias = ov.antecedenciaMinimaDias;
+    if (ov.antecedenciaMinimaDias !== undefined && ov.antecedenciaMinimaDias !== null) SS.config.loja.antecedenciaMinimaDias = Number(ov.antecedenciaMinimaDias) || 0;
     if (ov.entregaModo) SS.config.loja.entrega.modo = ov.entregaModo;
     if (ov.taxaEntrega !== undefined) SS.config.loja.entrega.taxaEntrega = ov.taxaEntrega;
     if (ov.taxasBairro) SS.config.loja.entrega.taxasBairro = ov.taxasBairro;
@@ -767,6 +782,16 @@ window.SS = window.SS || {};
         for (var i = 0; i < defMet.length; i++) if (defMet[i].nome === clean) return defMet[i];
         return { nome: clean, icone: 'ph:credit-card', tipo: 'outro' };
       }).filter(function (m) { return !!m.nome; });
+    }
+    // Pix configurável
+    if (ov.pixChave !== undefined) {
+      if (!SS.config.loja.pix) SS.config.loja.pix = {};
+      SS.config.loja.pix.tipo = ov.pixTipo || SS.config.loja.pix.tipo || 'ALEATORIA';
+      SS.config.loja.pix.chave = ov.pixChave || '';
+      SS.config.loja.pix.nome = ov.pixNome || SS.config.loja.pix.nome || 'Sublime Sonhos';
+      SS.config.loja.pix.cidade = ov.pixCidade || SS.config.loja.pix.cidade || 'Aurelino Leal';
+      SS.config.loja.pix.expiraMinutos = (ov.pixExpira !== undefined && ov.pixExpira !== null) ? ov.pixExpira : (SS.config.loja.pix.expiraMinutos || 30);
+      SS.config.loja.pix.mensagem = ov.pixMensagem !== undefined ? ov.pixMensagem : (SS.config.loja.pix.mensagem || '');
     }
   }
 
@@ -786,11 +811,10 @@ window.SS = window.SS || {};
       getCategoria: getCategoria,
       getCategoriaNome: getCategoriaNome,
       contarProdutosPorCategoria: contarProdutosPorCategoria,
+      getCategoriasDeProduto: getCategoriasDeProduto,
+      produtoPertenceCategoria: produtoPertenceCategoria,
       aplicarConfiguracoes: aplicarConfiguracoes,
-      getSenhaAtual: getSenhaAtual,
-      setSenhaNova: setSenhaNova,
       _STORAGE_KEY: STORAGE_KEY,
-      _SENHA_KEY: SENHA_KEY,
       _salvarOverrides: salvarOverrides,
       _lerOverrides: lerOverrides,
       _base: { categorias: CATEGORIAS_BASE, produtos: PRODUTOS_BASE },

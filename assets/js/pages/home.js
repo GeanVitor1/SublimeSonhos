@@ -11,8 +11,10 @@ window.SS = window.SS || {};
   var cfg = SS.config;
 
   function logErro(origem, err) {
+    // log silencioso — evita expor stack no console em produção
     if (window.console && console.error) {
-      console.error('[Sublime Sonhos] Falha ao renderizar ' + origem + ':', err);
+      // apenas em localhost para debug
+      try{ if(location.hostname==='localhost' || location.hostname==='127.0.0.1') console.error('[Sublime Sonhos] Falha ao renderizar ' + origem + ':', err); }catch(e){}
     }
   }
 
@@ -295,7 +297,11 @@ window.SS = window.SS || {};
     initHeroRotacao();
     initSplitGaleria();
     try {
-      if (location.hash) sessionStorage.setItem('ss_last_catalog_hash', location.hash);
+      if (location.hash) {
+        // sanitiza: aceita apenas #categoria-alphanumerica — evita payload XSS
+        var hSan = location.hash.match(/^#[a-zA-Z0-9_-]+/);
+        sessionStorage.setItem('ss_last_catalog_hash', hSan ? hSan[0] : '#destaques');
+      }
       else if (!sessionStorage.getItem('ss_last_catalog_hash')) sessionStorage.setItem('ss_last_catalog_hash', '#destaques');
     } catch (e) {}
   });

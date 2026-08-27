@@ -23,9 +23,12 @@ window.SS = window.SS || {};
   }
 
   function ehAtiva(href) {
-    var alvo = href.split('#')[0];
+    var partes = href.split('#');
+    var alvo = partes[0];
     if (!alvo) return false;
-    return paginaAtual() === alvo;
+    if (paginaAtual() !== alvo) return false;
+    if (partes.length > 1) return location.hash === '#' + partes[1];
+    return !location.hash || location.hash === '#inicio';
   }
 
   function renderHeader() {
@@ -75,7 +78,7 @@ window.SS = window.SS || {};
           '<a class="mm-link" href="admin.html"><iconify-icon icon="ph:lock" width="16" height="16"></iconify-icon> Área da loja</a>' +
           '<a class="btn btn--primary btn--block mm-cta" href="encomenda.html">Fazer pedido</a>' +
           '<div class="mobile-menu__foot">' +
-            '<a class="btn btn--whatsapp btn--block" href="' + SS.whatsapp.linkContato() + '" target="_blank" rel="noopener">' + ICON_WHATSAPP + ' Pedir pelo WhatsApp</a>' +
+            '<a class="btn btn--whatsapp btn--block" href="' + u.esc(SS.whatsapp.linkContato()) + '" target="_blank" rel="noopener">' + ICON_WHATSAPP + ' Pedir pelo WhatsApp</a>' +
             '<a class="btn btn--outline btn--block" href="' + u.esc(cfg.social.instagram) + '" target="_blank" rel="noopener">' + ICON_INSTA + ' ' + u.esc(cfg.social.instagramUsuario) + '</a>' +
           '</div>' +
         '</div>' +
@@ -108,13 +111,13 @@ window.SS = window.SS || {};
               '<li>' + ICON_PIN + '<span>' + u.esc(cfg.loja.area) + '</span></li>' +
               '<li>' + ICON_CLOCK + '<span>' + u.esc(cfg.loja.horario) + '</span></li>' +
               '<li><a href="' + u.esc(cfg.social.instagram) + '" target="_blank" rel="noopener">' + ICON_INSTA + ' ' + u.esc(cfg.social.instagramUsuario) + '</a></li>' +
-              '<li><a href="' + SS.whatsapp.linkContato() + '" target="_blank" rel="noopener">' + ICON_WHATSAPP + ' WhatsApp da loja</a></li>' +
+              '<li><a href="' + u.esc(SS.whatsapp.linkContato()) + '" target="_blank" rel="noopener">' + ICON_WHATSAPP + ' WhatsApp da loja</a></li>' +
             '</ul>' +
           '</div>' +
           '<div class="footer-col">' +
             '<h4>Como encomendar</h4>' +
             '<p class="text-sm" style="color:rgba(255,255,255,0.6)">Escolha seus doces, defina data e entrega, selecione o pagamento e envie tudo pelo WhatsApp. O pedido é confirmado pela loja após a verificação de disponibilidade.</p>' +
-            '<div style="margin-top:16px"><a class="footer-whats" href="' + SS.whatsapp.linkContato() + '" target="_blank" rel="noopener">' + ICON_WHATSAPP + ' Fazer pedido agora</a></div>' +
+            '<div style="margin-top:16px"><a class="footer-whats" href="' + u.esc(SS.whatsapp.linkContato()) + '" target="_blank" rel="noopener">' + ICON_WHATSAPP + ' Fazer pedido agora</a></div>' +
           '</div>' +
         '</div>' +
         '<div class="footer-bottom">' +
@@ -174,7 +177,6 @@ window.SS = window.SS || {};
   function renderCartDrawer(itens) {
     var body = document.getElementById('cart-drawer-body');
     var foot = document.getElementById('cart-drawer-foot');
-    var count = document.getElementById('cart-count');
     var badge = document.querySelector('.cart-count');
     if (badge) badge.textContent = SS.cart.contar() > 0 ? String(SS.cart.contar()) : '';
     atualizarCartFloat();
@@ -198,7 +200,7 @@ window.SS = window.SS || {};
       var preco = SS.cart.precoUnitarioItem(item);
       return (
         '<div class="cart-item">' +
-          (item.imagem ? '<img class="cart-item__img" src="' + item.imagem + '" alt="' + u.esc(item.nome) + '" loading="lazy">' : '') +
+          (item.imagem ? '<img class="cart-item__img" src="' + u.esc(item.imagem) + '" alt="' + u.esc(item.nome) + '" loading="lazy">' : '') +
           '<div class="cart-item__body">' +
             '<div class="cart-item__name">' + u.esc(item.nome) + '</div>' +
             (ops ? '<div class="cart-item__opts">' + u.esc(ops) + '</div>' : '') +
@@ -314,7 +316,7 @@ window.SS = window.SS || {};
       '</aside>' +
       '<div class="toast" id="toast" role="status" aria-live="polite"></div>' +
       '<button type="button" class="cart-float" id="cart-float" aria-label="Abrir carrinho" data-open-cart>' + ICON_CART + '<span class="cart-float__count" aria-hidden="true"></span></button>' +
-      '<a class="wa-float" href="' + SS.whatsapp.linkContato() + '" target="_blank" rel="noopener" aria-label="Conversar no WhatsApp">' + ICON_WHATSAPP + '</a>';
+      '<a class="wa-float" href="' + u.esc(SS.whatsapp.linkContato()) + '" target="_blank" rel="noopener" aria-label="Conversar no WhatsApp">' + ICON_WHATSAPP + '</a>';
     document.body.appendChild(div);
   }
 
@@ -348,6 +350,8 @@ window.SS = window.SS || {};
     _ensureDocHandlers();
     var container = scope || document;
     container.querySelectorAll('select.form-control').forEach(function (sel) {
+      if (sel.classList.contains('hidden')) return;
+      if (sel.closest && sel.closest('.hidden')) return;
       if (sel.hasAttribute('data-custom-select')) return;
       convertSelectToCustom(sel);
     });
@@ -430,7 +434,7 @@ window.SS = window.SS || {};
       lbl.textContent = selectedText || placeholder;
     }
 
-    // When options change externally (e.g. f-forma innerHTML), update label
+    // When value or options change externally (e.g. popularConfig sets sel.value), update label
     var observer = new MutationObserver(function () {
       var placeholder = 'Selecione…';
       var selectedText = '';
@@ -441,7 +445,17 @@ window.SS = window.SS || {};
       var lbl = trigger.querySelector('.custom-select__label');
       lbl.textContent = selectedText || placeholder;
     });
-    observer.observe(sel, { childList: true });
+    observer.observe(sel, { childList: true, attributes: true, attributeFilter: ['value'] });
+    sel.addEventListener('change', function () {
+      var placeholder = 'Selecione…';
+      var selectedText = '';
+      Array.prototype.forEach.call(sel.options, function (o) {
+        if (!o.value) placeholder = o.textContent.trim();
+        if (o.value === sel.value) selectedText = o.textContent.trim();
+      });
+      var lbl = trigger.querySelector('.custom-select__label');
+      lbl.textContent = selectedText || placeholder;
+    });
 
     // Trigger click: toggle dropdown
     trigger.addEventListener('click', function (e) {

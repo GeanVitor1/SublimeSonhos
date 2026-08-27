@@ -8,7 +8,8 @@ window.SS = window.SS || {};
   var brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
   function fmtBRL(v) {
-    if (v === null || v === undefined || isNaN(v)) return '—';
+    if (v === null || v === undefined || v === '' || isNaN(v)) return '—';
+    if (typeof v === 'string' && v.trim() === '') return '—';
     return brl.format(v);
   }
 
@@ -122,7 +123,7 @@ window.SS = window.SS || {};
      de produto não estiver disponível ou falhar ao carregar. Não depende
      de nenhum recurso externo. */
   function imgFallback() {
-    return "data:image/svg+xml;utf8," +
+    return ("data:image/svg+xml;utf8," +
       "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E" +
       "%3Crect width='400' height='300' fill='%23f3c9d7'/%3E" +
       "%3Cellipse cx='200' cy='232' rx='118' ry='15' fill='%23c49a5a'/%3E" +
@@ -132,10 +133,11 @@ window.SS = window.SS || {};
       "%3Crect x='196' y='58' width='8' height='26' fill='%235b1e33'/%3E" +
       "%3Ccircle cx='200' cy='52' r='7' fill='%23c49a5a'/%3E" +
       "%3Ctext x='200' y='150' font-family='Georgia, serif' font-size='26' font-style='italic' text-anchor='middle' fill='%235b1e33'%3ESublime Sonhos%3C/text%3E" +
-      "%3C/svg%3E";
+      "%3C/svg%3E").replace(/'/g, '%27');
   }
 
-  /* Atributo onerror pronto para usar nos <img> injetados por JS. */
+  /* Atributo onerror pronto para usar nos <img> injetados por JS.
+     (aspas internas do data URI vão percent-encoded para não quebrar o handler) */
   function imgFallbackAttr() {
     return ' onerror="this.onerror=null;this.src=\'' + imgFallback() + '\';"';
   }

@@ -3,9 +3,8 @@
    =========================================================================
    TODAS as informações da loja ficam centralizadas aqui.
    A proprietária pode editar estes valores ou usar a área administrativa
-   (/admin.html), que salva as alterações neste navegador (modo demonstração).
-   Para publicar as alterações para todos os clientes, veja o README.md
-   (ativação do Supabase).
+   (/admin.html), que salva as alterações localmente neste navegador
+   até a ativação do backend.
    ========================================================================= */
 window.SS = window.SS || {};
 
@@ -69,7 +68,7 @@ SS.config = {
       /* Formas de pagamento — usadas tanto para "antecipado" quanto para
          "na entrega ou retirada" (mesma lista em ambos). Cada método tem:
          nome, icone (Iconify) e tipo (pix|cartao|dinheiro|link|outro), que
-         define o comportamento de simulação na tela de pagamento. */
+         define o comportamento na tela de pagamento. */
       metodos: [
         { nome: 'PIX', icone: 'ph:qr-code', tipo: 'pix' },
         { nome: 'Cartão de crédito', icone: 'ph:credit-card', tipo: 'cartao' },
@@ -80,19 +79,20 @@ SS.config = {
       ],
       nota: 'Pagamento antecipado pode ser solicitado para encomendas e pedidos de alto valor. Instruções de PIX e link são enviadas pela loja após o recebimento do pedido.',
     },
+    pix: {
+      /* Chave Pix configurável pelo admin (configuracoes → Pix).
+         Preencha aqui um valor padrão ou deixe vazio para forçar configuração no painel. */
+      tipo: 'ALEATORIA', // CPF | CNPJ | TELEFONE | EMAIL | ALEATORIA
+      chave: '', // ex: 73981756809 (telefone sem máscara), email, CPF, etc
+      nome: 'Sublime Sonhos',
+      cidade: 'Aurelino Leal',
+      expiraMinutos: 30,
+      mensagem: 'Pedido Sublime Sonhos',
+    },
     politicas:
       'Pedidos enviados pelo WhatsApp são recebidos como solicitações e dependem da confirmação da confeitaria, conforme disponibilidade, prazo e região de entrega.',
   },
 
-  /* ------------------------------------------------------------------ */
-  /* ADMIN (modo demonstração)                                           */
-  /* ------------------------------------------------------------------ */
-  admin: {
-    /* Senha provisória da área administrativa. NÃO é segura para produção.
-       Quando o Supabase for ativado, a autenticação passará a ser feita
-       pelo e-mail/senha do Supabase Auth (veja README.md). */
-    senhaDemo: 'sublime2026',
-    avisoDemo:
-      'Modo demonstração: as alterações ficam salvas apenas neste navegador (localStorage). Para publicar os cadastros para todos os clientes, ative o Supabase conforme o README.',
-  },
+  /* Autenticação do painel administrativo é feita no servidor
+     (api/login.js, variável de ambiente ADMIN_PASSWORD na Vercel). */
 };
