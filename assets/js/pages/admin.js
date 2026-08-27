@@ -178,9 +178,9 @@ window.SS = window.SS || {};
               '</div>' +
               '<div class="admin-card__foot">' +
                 '<div class="admin-card__actions">' +
-                  '<button type="button" class="a-edit" data-editar="' + u.esc(p.id) + '">Editar</button>' +
-                  '<button type="button" class="a-toggle a-vis' + (p.ativo ? '' : ' is-hidden') + '" data-toggle="' + u.esc(p.id) + '">' + (p.ativo ? 'Ocultar' : 'Mostrar') + '</button>' +
-                  '<button type="button" class="a-del" data-del="' + u.esc(p.id) + '">Excluir</button>' +
+                  '<button type="button" class="btn-cat-act btn-cat-act--edit" data-editar="' + u.esc(p.id) + '"><iconify-icon icon="ph:pencil-simple" width="14" height="14"></iconify-icon> Editar</button>' +
+                  '<button type="button" class="btn-cat-act btn-cat-act--vis' + (p.ativo ? '' : ' is-hidden') + '" data-toggle="' + u.esc(p.id) + '"><iconify-icon icon="ph:' + (p.ativo ? 'eye-slash' : 'eye') + '" width="14" height="14"></iconify-icon> ' + (p.ativo ? 'Ocultar' : 'Mostrar') + '</button>' +
+                  '<button type="button" class="btn-cat-act btn-cat-act--del" data-del="' + u.esc(p.id) + '"><iconify-icon icon="ph:trash" width="14" height="14"></iconify-icon> Excluir</button>' +
                 '</div>' +
               '</div>' +
             '</article>'
@@ -194,7 +194,7 @@ window.SS = window.SS || {};
         var preco2 = p.preco === null || p.preco === undefined ? '<span class="text-muted">Sob consulta</span>' : u.fmtBRL(p.preco) + (p.precoPromo ? ' <span style="font-size:12px;color:var(--muted);text-decoration:line-through;margin-left:6px">' + u.fmtBRL(p.precoPromo) + '</span>' : '');
         var statusBadge2 = p.esgotado ? '<span class="badge badge--ink">Esgotado</span>' : p.ativo ? '<span class="badge badge--visible">Visível</span>' : '<span class="badge badge--hidden">Oculto</span>';
         var media2 = p.imagens && p.imagens[0] ? '<img src="' + u.esc(p.imagens[0]) + '" alt="' + u.esc(p.nome) + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + u.imgFallback() + '\';">' : '<div class="admin-card__media-fallback"><iconify-icon icon="ph:image" width="32" height="32"></iconify-icon></div>';
-        return '<article class="admin-card"><div class="admin-card__media">' + media2 + '<div class="admin-card__topbadges">' + statusBadge2 + '</div></div><div class="admin-card__body"><span class="admin-card__cat">Sem categoria</span><div class="admin-card__name">' + u.esc(p.nome) + '</div><div class="admin-card__id">' + u.esc(p.id) + '</div><div class="admin-card__price">' + preco2 + '</div><div class="admin-card__desc">' + u.esc(p.descricaoCurta || p.descricao || 'Sem descrição') + '</div></div><div class="admin-card__foot"><div class="admin-card__actions"><button type="button" class="a-edit" data-editar="' + u.esc(p.id) + '">Editar</button><button type="button" class="a-toggle a-vis' + (p.ativo ? '' : ' is-hidden') + '" data-toggle="' + u.esc(p.id) + '">' + (p.ativo ? 'Ocultar' : 'Mostrar') + '</button><button type="button" class="a-del" data-del="' + u.esc(p.id) + '">Excluir</button></div></div></article>';
+        return '<article class="admin-card"><div class="admin-card__media">' + media2 + '<div class="admin-card__topbadges">' + statusBadge2 + '</div></div><div class="admin-card__body"><span class="admin-card__cat">Sem categoria</span><div class="admin-card__name">' + u.esc(p.nome) + '</div><div class="admin-card__id">' + u.esc(p.id) + '</div><div class="admin-card__price">' + preco2 + '</div><div class="admin-card__desc">' + u.esc(p.descricaoCurta || p.descricao || 'Sem descrição') + '</div></div><div class="admin-card__foot"><div class="admin-card__actions"><button type="button" class="btn-cat-act btn-cat-act--edit" data-editar="' + u.esc(p.id) + '"><iconify-icon icon="ph:pencil-simple" width="14" height="14"></iconify-icon> Editar</button><button type="button" class="btn-cat-act btn-cat-act--vis' + (p.ativo ? '' : ' is-hidden') + '" data-toggle="' + u.esc(p.id) + '"><iconify-icon icon="ph:' + (p.ativo ? 'eye-slash' : 'eye') + '" width="14" height="14"></iconify-icon> ' + (p.ativo ? 'Ocultar' : 'Mostrar') + '</button><button type="button" class="btn-cat-act btn-cat-act--del" data-del="' + u.esc(p.id) + '"><iconify-icon icon="ph:trash" width="14" height="14"></iconify-icon> Excluir</button></div></div></article>';
       }).join('') + '</div></section>';
     }
     grid.innerHTML = html || '<div class="section-state" style="grid-column:1/-1"><span class="section-state__ico"><iconify-icon icon="ph:package" width="32" height="32"></iconify-icon></span><p><strong>Nenhum produto encontrado.</strong></p></div>';
@@ -520,6 +520,127 @@ window.SS = window.SS || {};
     img.src = dataUrl;
   }
 
+    function moverCategoria(id, dir) {
+      var ov = lerOverrides();
+      var cats = (ov.categorias && ov.categorias.length ? ov.categorias : db._base.categorias.slice()).map(function (c) {
+        return Object.assign({}, c);
+      });
+      var idx = -1;
+      for (var i = 0; i < cats.length; i++) {
+        if (cats[i].id === id) { idx = i; break; }
+      }
+      if (idx === -1) {
+        var baseCat = db.getCategoria(id);
+        if (baseCat) {
+          cats.push(Object.assign({}, baseCat));
+          idx = cats.length - 1;
+        }
+      }
+      if (idx === -1) return;
+      var targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= cats.length) return;
+      var temp = cats[idx];
+      cats[idx] = cats[targetIdx];
+      cats[targetIdx] = temp;
+      ov.categorias = cats;
+      salvar(ov);
+      SS.ui.toast('Ordem atualizada! "' + temp.nome + '" agora é a ' + (targetIdx + 1) + 'ª na vitrine.', 'success');
+      renderCategorias();
+    }
+
+    function abrirModalReordenarCategorias() {
+      var ov = lerOverrides();
+      var cats = (ov.categorias && ov.categorias.length ? ov.categorias : db._base.categorias.slice()).map(function (c) {
+        return Object.assign({}, c);
+      });
+      if (!cats.length) {
+        SS.ui.toast('Nenhuma categoria cadastrada.', 'error');
+        return;
+      }
+
+      function gerarListaReordenar(lista) {
+        return lista.map(function (c, idx) {
+          var isFirst = idx === 0;
+          var isLast = idx === lista.length - 1;
+          var opts = lista.map(function (_, i) {
+            return '<option value="' + i + '"' + (i === idx ? ' selected' : '') + '>' + (i + 1) + 'ª posição' + (i === 0 ? ' (Primeira)' : (i === lista.length - 1 ? ' (Última)' : '')) + '</option>';
+          }).join('');
+          return (
+            '<div class="cat-reorder-item" data-idx="' + idx + '" data-id="' + u.esc(c.id) + '">' +
+              '<div class="cat-reorder-item__left">' +
+                '<span class="cat-reorder-num">#' + (idx + 1) + '</span>' +
+                '<span class="admin-cat-card__ico" style="width:32px;height:32px"><iconify-icon icon="ph:' + u.esc(c.icone || 'cookie') + '" width="18" height="18"></iconify-icon></span>' +
+                '<div style="min-width:0;flex:1"><strong style="font-size:14px">' + u.esc(c.nome) + '</strong>' + (c.ativo === false ? ' <span class="badge badge--hidden" style="font-size:10px;padding:2px 6px;margin-left:4px">Oculta</span>' : '') + '</div>' +
+              '</div>' +
+              '<div class="cat-reorder-item__right">' +
+                '<select class="form-control cat-pos-select" data-select-idx="' + idx + '" style="width:auto;min-height:36px;padding:4px 10px;font-size:13px">' + opts + '</select>' +
+                '<div class="btn-group-order">' +
+                  '<button type="button" class="btn btn--outline btn--sm" data-reorder-btn="' + idx + '" data-dir="-1" title="Mover para cima" ' + (isFirst ? 'disabled' : '') + ' style="padding:6px 10px"><iconify-icon icon="ph:arrow-up" width="14" height="14"></iconify-icon></button>' +
+                  '<button type="button" class="btn btn--outline btn--sm" data-reorder-btn="' + idx + '" data-dir="1" title="Mover para baixo" ' + (isLast ? 'disabled' : '') + ' style="padding:6px 10px"><iconify-icon icon="ph:arrow-down" width="14" height="14"></iconify-icon></button>' +
+                '</div>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+      }
+
+      var modalHtml =
+        '<div class="modal-section" style="padding:16px">' +
+          '<h4><iconify-icon icon="ph:arrows-down-up" width="16" height="16"></iconify-icon> Ordem de exibição na loja</h4>' +
+          '<p class="form-hint" style="margin-bottom:14px">Escolha a posição numérica ou use as setas para definir a sequência. A categoria no topo (1ª) é a primeira que aparece para o cliente na vitrine.</p>' +
+          '<div id="cat-reorder-list" class="cat-reorder-list">' + gerarListaReordenar(cats) + '</div>' +
+        '</div>';
+
+      abrirModal('Organizar ordem das categorias', modalHtml,
+        '<button type="button" class="btn btn--outline" data-fechar>Cancelar</button>' +
+        '<button type="button" class="btn btn--primary" id="btn-salvar-reordem"><iconify-icon icon="ph:check" width="16" height="16"></iconify-icon> Salvar ordem</button>'
+      );
+
+      function bindReorderEvents() {
+        var listContainer = document.getElementById('cat-reorder-list');
+        if (!listContainer) return;
+        listContainer.innerHTML = gerarListaReordenar(cats);
+
+        listContainer.querySelectorAll('[data-reorder-btn]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var cur = parseInt(btn.getAttribute('data-reorder-btn'), 10);
+            var dir = parseInt(btn.getAttribute('data-dir'), 10);
+            var target = cur + dir;
+            if (target < 0 || target >= cats.length) return;
+            var item = cats.splice(cur, 1)[0];
+            cats.splice(target, 0, item);
+            bindReorderEvents();
+          });
+        });
+
+        listContainer.querySelectorAll('.cat-pos-select').forEach(function (sel) {
+          sel.addEventListener('change', function () {
+            var fromIdx = parseInt(sel.getAttribute('data-select-idx'), 10);
+            var toIdx = parseInt(sel.value, 10);
+            if (fromIdx === toIdx) return;
+            var item = cats.splice(fromIdx, 1)[0];
+            cats.splice(toIdx, 0, item);
+            bindReorderEvents();
+          });
+        });
+      }
+
+      bindReorderEvents();
+
+      var btnSalvar = modalOverlay.querySelector('#btn-salvar-reordem');
+      if (btnSalvar) {
+        btnSalvar.addEventListener('click', function () {
+          var ov = lerOverrides();
+          ov.categorias = cats;
+          salvar(ov);
+          fecharModal();
+          SS.ui.toast('Ordem das categorias salva com sucesso!', 'success');
+          renderCategorias();
+        });
+      }
+      modalOverlay.querySelector('[data-fechar]').addEventListener('click', fecharModal);
+    }
+
     function renderCategorias() {
     var grid = document.getElementById('tabela-categorias');
     var cats = db.getCategoriasTodas ? db.getCategoriasTodas() : db.getCategorias();
@@ -528,7 +649,7 @@ window.SS = window.SS || {};
       grid.innerHTML = '<div class="section-state" style="grid-column:1/-1"><span class="section-state__ico"><iconify-icon icon="ph:folder" width="32" height="32"></iconify-icon></span><p><strong>Nenhuma categoria.</strong></p><p class="section-state__sub">Crie a primeira categoria para organizar seus produtos.</p></div>';
       return;
     }
-    grid.innerHTML = cats.map(function (c) {
+    grid.innerHTML = cats.map(function (c, idx) {
       var count = todosProds.filter(function (p) {
         if (p._excluido) return false;
         if (Array.isArray(p.categorias) && p.categorias.length) return p.categorias.indexOf(c.id) !== -1;
@@ -536,50 +657,101 @@ window.SS = window.SS || {};
         return false;
       }).length;
       var visivel = c.ativo !== false;
+      var isFirst = idx === 0;
+      var isLast = idx === cats.length - 1;
       return (
-        '<article class="admin-cat-card">' +
-          '<div class="admin-cat-card__head">' +
-            '<span class="admin-cat-card__ico"><iconify-icon icon="ph:' + u.esc(c.icone || 'cookie') + '" width="20" height="20"></iconify-icon></span>' +
-            '<div><div class="admin-cat-card__name">' + u.esc(c.nome) + '</div><div class="admin-cat-card__id">' + u.esc(c.id) + '</div></div>' +
+        '<article class="admin-cat-card' + (visivel ? '' : ' is-oculta') + '" data-catid="' + u.esc(c.id) + '">' +
+          '<div class="admin-cat-card__header">' +
+            '<div class="admin-cat-card__main">' +
+              '<span class="admin-cat-card__ico"><iconify-icon icon="ph:' + u.esc(c.icone || 'cookie') + '" width="22" height="22"></iconify-icon></span>' +
+              '<div class="admin-cat-card__info">' +
+                '<h4 class="admin-cat-card__name">' + u.esc(c.nome) + '</h4>' +
+                '<span class="admin-cat-card__slug">#' + u.esc(c.id) + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="admin-cat-card__order-box" title="Posição na vitrine da loja">' +
+              '<span class="cat-pos-tag">' + (idx + 1) + 'º</span>' +
+              '<div class="cat-order-arrows">' +
+                '<button type="button" class="btn-order-arrow" data-movecat="' + u.esc(c.id) + '" data-dir="-1" title="Subir na vitrine" ' + (isFirst ? 'disabled' : '') + '><iconify-icon icon="ph:caret-up-bold" width="13" height="13"></iconify-icon></button>' +
+                '<button type="button" class="btn-order-arrow" data-movecat="' + u.esc(c.id) + '" data-dir="1" title="Descer na vitrine" ' + (isLast ? 'disabled' : '') + '><iconify-icon icon="ph:caret-down-bold" width="13" height="13"></iconify-icon></button>' +
+              '</div>' +
+            '</div>' +
           '</div>' +
-          '<div class="admin-cat-card__desc">' + u.esc(c.descricao || 'Sem descrição') + '</div>' +
-          '<div class="admin-cat-card__meta">' +
-            (visivel ? '<span class="badge badge--visible">Visível na home</span>' : '<span class="badge badge--hidden">Oculta</span>') +
-            '<span class="admin-cat-card__count">' + count + ' produto' + (count===1 ? '' : 's') + '</span>' +
+          (c.descricao ? '<p class="admin-cat-card__desc">' + u.esc(c.descricao) + '</p>' : '<p class="admin-cat-card__desc" style="color:var(--muted);font-style:italic">Sem descrição cadastrada</p>') +
+          '<div class="admin-cat-card__status-line">' +
+            '<span class="cat-status-dot ' + (visivel ? 'is-active' : 'is-inactive') + '"></span>' +
+            '<span class="cat-status-text">' + (visivel ? 'Visível na vitrine' : 'Oculta da vitrine') + '</span>' +
+            '<span class="cat-status-sep">•</span>' +
+            '<span class="cat-count-text">' + count + ' ' + (count === 1 ? 'produto' : 'produtos') + '</span>' +
           '</div>' +
           '<div class="admin-cat-card__actions">' +
-            '<button type="button" class="a-edit" data-editcat="' + u.esc(c.id) + '">Editar</button>' +
-            '<button type="button" class="a-vis' + (visivel ? '' : ' is-hidden') + '" data-actuscat="' + u.esc(c.id) + '">' + (visivel ? 'Ocultar' : 'Mostrar') + '</button>' +
-            '<button type="button" class="a-del" data-delcat="' + u.esc(c.id) + '">Excluir</button>' +
+            '<button type="button" class="btn-cat-act btn-cat-act--edit" data-editcat="' + u.esc(c.id) + '"><iconify-icon icon="ph:pencil-simple" width="14" height="14"></iconify-icon> Editar</button>' +
+            '<button type="button" class="btn-cat-act btn-cat-act--vis' + (visivel ? '' : ' is-hidden') + '" data-actuscat="' + u.esc(c.id) + '"><iconify-icon icon="ph:' + (visivel ? 'eye-slash' : 'eye') + '" width="14" height="14"></iconify-icon> ' + (visivel ? 'Ocultar' : 'Mostrar') + '</button>' +
+            '<button type="button" class="btn-cat-act btn-cat-act--del" data-delcat="' + u.esc(c.id) + '"><iconify-icon icon="ph:trash" width="14" height="14"></iconify-icon> Excluir</button>' +
           '</div>' +
         '</article>'
       );
     }).join('');
+
+    grid.querySelectorAll('[data-movecat]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var id = btn.getAttribute('data-movecat');
+        var dir = parseInt(btn.getAttribute('data-dir'), 10);
+        moverCategoria(id, dir);
+      });
+    });
+
     grid.querySelectorAll('[data-editcat]').forEach(function (b) {
       b.addEventListener('click', function () {
         var id = b.getAttribute('data-editcat');
         var cat = db.getCategoria(id);
         if (!cat) return;
+        var allCats = db.getCategoriasTodas ? db.getCategoriasTodas() : db.getCategorias();
+        var curIdx = 0;
+        for (var ci = 0; ci < allCats.length; ci++) {
+          if (allCats[ci].id === id) { curIdx = ci; break; }
+        }
+        var posOptions = allCats.map(function (_, i) {
+          return '<option value="' + i + '"' + (i === curIdx ? ' selected' : '') + '>' + (i + 1) + 'ª posição' + (i === 0 ? ' (Primeira da vitrine)' : (i === allCats.length - 1 ? ' (Última da vitrine)' : '')) + '</option>';
+        }).join('');
+
         abrirModal('Editar categoria',
           '<div class="modal-section"><h4><iconify-icon icon="ph:folder" width="16" height="16"></iconify-icon> Dados da categoria</h4>' +
           '<div class="form-group"><label class="form-label">Nome da categoria <span class="req">*</span></label><input class="form-control" id="cf-nome" value="' + u.esc(cat.nome) + '" placeholder="Ex.: Doces finos"><p class="form-hint">Como aparece na página inicial.</p></div>' +
           '<div class="form-group"><label class="form-label">Ícone</label>' + campoIcone(cat.icone) + '</div>' +
           '<div class="form-group mt-2"><label class="form-label">Descrição curta</label><input class="form-control" id="cf-desc" value="' + u.esc(cat.descricao || '') + '" placeholder="Ex.: Doces para presentear"></div></div>' +
+          '<div class="modal-section"><h4><iconify-icon icon="ph:arrows-down-up" width="16" height="16"></iconify-icon> Posição na vitrine</h4>' +
+          '<div class="form-group"><label class="form-label">Ordem de exibição</label><select class="form-control" id="cf-posicao">' + posOptions + '</select><p class="form-hint">Define se aparece antes ou depois das outras categorias na loja.</p></div></div>' +
           '<div class="modal-section"><h4><iconify-icon icon="ph:eye" width="16" height="16"></iconify-icon> Exibição</h4><label class="pf-check"><input type="checkbox" id="cf-ativo" ' + (cat.ativo !== false ? 'checked' : '') + '><span>Visível na página inicial</span></label><p class="form-hint mt-2">Desmarque para ocultar a seção inteira sem excluir os produtos.</p></div>',
           '<button type="button" class="btn btn--outline" data-fechar>Cancelar</button><button type="button" class="btn btn--primary" id="cf-salvar">Salvar categoria</button>');
         initCampoIcone();
         modalOverlay.querySelector('#cf-salvar').addEventListener('click', function () {
           var nome = document.getElementById('cf-nome').value.trim();
           if (!nome) { SS.ui.toast('Informe o nome.', 'error'); return; }
-          var cats = db.getCategoriasTodas().map(function (c) {
-            if (c.id !== id) return c;
+          var newPos = parseInt(document.getElementById('cf-posicao').value, 10);
+          var cats = (db.getCategoriasTodas ? db.getCategoriasTodas() : db.getCategorias()).map(function (c) {
+            if (c.id !== id) return Object.assign({}, c);
             return Object.assign({}, c, { nome: nome, icone: document.getElementById('cf-ico').value.trim() || c.icone, descricao: document.getElementById('cf-desc').value.trim(), ativo: document.getElementById('cf-ativo').checked });
           });
+
+          // Reordena se a posição mudou
+          if (!isNaN(newPos) && newPos >= 0 && newPos < cats.length) {
+            var oldIdx = -1;
+            for (var k = 0; k < cats.length; k++) {
+              if (cats[k].id === id) { oldIdx = k; break; }
+            }
+            if (oldIdx !== -1 && oldIdx !== newPos) {
+              var item = cats.splice(oldIdx, 1)[0];
+              cats.splice(newPos, 0, item);
+            }
+          }
+
           var ov = lerOverrides();
           ov.categorias = cats;
           salvar(ov);
           fecharModal();
-          SS.ui.toast('Categoria atualizada.', '');
+          SS.ui.toast('Categoria atualizada.', 'success');
           renderCategorias();
         });
         modalOverlay.querySelector('[data-fechar]').addEventListener('click', fecharModal);
@@ -1253,6 +1425,8 @@ window.SS = window.SS || {};
     if (btnNovo) btnNovo.addEventListener('click', function () { abrirFormProduto(null); });
     var btnNovaCat = document.getElementById('btn-nova-cat');
     if (btnNovaCat) btnNovaCat.addEventListener('click', novaCategoria);
+    var btnReordenarCats = document.getElementById('btn-reordenar-cats');
+    if (btnReordenarCats) btnReordenarCats.addEventListener('click', abrirModalReordenarCategorias);
     var btnExportar = document.getElementById('btn-exportar');
     if (btnExportar) btnExportar.addEventListener('click', exportarCatalogo);
     var busca = document.getElementById('busca-prod');

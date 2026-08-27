@@ -77,7 +77,11 @@ window.SS = window.SS || {};
     var produtos = SS.catalog.db.getProdutos();
     var cats = SS.catalog.db.getCategoriasVisiveis ? SS.catalog.db.getCategoriasVisiveis() : SS.catalog.db.getCategorias().filter(function(c){ return c.ativo !== false; });
     return cats.filter(function (c) {
-      return produtos.some(function (p) { return p.categoria === c.id; });
+      return produtos.some(function (p) {
+        if (p._excluido || !p.ativo) return false;
+        if (Array.isArray(p.categorias) && p.categorias.length) return p.categorias.indexOf(c.id) !== -1;
+        return p.categoria === c.id;
+      });
     });
   }
 
@@ -120,7 +124,11 @@ window.SS = window.SS || {};
     }
 
     container.innerHTML = cats.map(function (c) {
-      var itens = produtos.filter(function (p) { return p.categoria === c.id; });
+      var itens = produtos.filter(function (p) {
+        if (p._excluido || !p.ativo) return false;
+        if (Array.isArray(p.categorias) && p.categorias.length) return p.categorias.indexOf(c.id) !== -1;
+        return p.categoria === c.id;
+      });
       var count = itens.length;
       return (
         '<section class="cat-secao" id="cat-' + encodeURIComponent(c.id) + '" aria-labelledby="cat-' + encodeURIComponent(c.id) + '-titulo">' +

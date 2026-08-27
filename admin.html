@@ -94,10 +94,13 @@
       <div data-tabpanel="categorias" class="hidden">
         <div class="flex gap-3 items-center justify-between mb-3" style="flex-wrap:wrap">
           <h2 style="font-size:22px">Categorias</h2>
-          <button type="button" class="btn btn--primary btn--sm" id="btn-nova-cat">+ Nova categoria</button>
+          <div class="flex gap-2">
+            <button type="button" class="btn btn--outline btn--sm" id="btn-reordenar-cats"><iconify-icon icon="ph:arrows-down-up" width="16" height="16"></iconify-icon> Organizar ordem</button>
+            <button type="button" class="btn btn--primary btn--sm" id="btn-nova-cat">+ Nova categoria</button>
+          </div>
         </div>
         <div class="admin-banner" style="background:rgba(107,112,72,0.08);color:var(--olive-dark);border:1px solid rgba(107,112,72,0.18);margin-bottom:14px">
-          <iconify-icon icon="ph:eye" width="16" height="16" style="vertical-align:-2px"></iconify-icon> <span><strong>Visibilidade:</strong> categorias ocultas não aparecem na página inicial. Use <em>Ocultar/Mostrar</em> para tirar da vitrine sem excluir. <em>Excluir</em> remove definitivamente (produtos órfãos ficam ocultos até reassociar).</span>
+          <iconify-icon icon="ph:arrows-down-up" width="16" height="16" style="vertical-align:-2px"></iconify-icon> <span><strong>Ordem na vitrine:</strong> a primeira categoria da lista é a primeira que aparece na página inicial. Use os botões <strong>Subir / Descer</strong> nos cards ou clique em <strong>Organizar ordem</strong> para definir a sequência exata de exibição.</span>
         </div>
         <div id="tabela-categorias" class="admin-cat-grid"><!-- cards via JS --></div>
       </div>
